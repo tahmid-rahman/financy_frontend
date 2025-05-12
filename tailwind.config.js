@@ -12,6 +12,7 @@ module.exports = {
         text: "rgb(var(--color-text) / <alpha-value>)",
         "text-muted": "rgb(var(--color-text-muted) / <alpha-value>)",
         border: "rgb(var(--color-border) / <alpha-value>)",
+        accent: "rgb(var(--color-accent) / <alpha-value>)",
       },
     },
   },

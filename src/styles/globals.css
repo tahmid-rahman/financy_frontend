@@ -30,3 +30,50 @@
     --color-border: 39 39 42; /* zinc-800 */
   }
 }
+@layer utilities {
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+  }
+  .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Smooth transitions */
+input,
+button,
+a {
+  @apply transition-colors duration-200;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 6s ease infinite;
+  background-size: 200% 200%;
+}
+
+.decoration-from-font {
+  text-decoration-thickness: from-font;
+}
