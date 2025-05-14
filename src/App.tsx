@@ -1,9 +1,13 @@
 import React from "react";
-import "../src/styles/globals.css";
+import "./styles/globals.css";
+import "./styles/calendar.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Signup from "./pages/Signup";
+import Expenses from "./pages/Expenses";
+import Income from "./pages/Income";
+import Tasks from "./pages/Tasks";
 // import { AuthProvider } from "./contexts/AuthContext";s
 
 function App() {
@@ -23,6 +27,9 @@ function App() {
         {/* <Route path="/goals" element={<Goals />} /> */}
         {/* <Route path="/notifications" element={<Notifications />} /> */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/Expenses" element={<Expenses />} />
+        <Route path="/Income" element={<Income />} />
+        <Route path="/Schedule" element={<Tasks />} />
       </Routes>
     </BrowserRouter>
   );
