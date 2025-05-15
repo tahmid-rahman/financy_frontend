@@ -1,8 +1,16 @@
 import React from "react";
-import "../src/styles/globals.css";
+import "./styles/globals.css";
+import "./styles/calendar.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
+import Signup from "./pages/Signup";
+import Expenses from "./pages/Expenses";
+import Income from "./pages/Income";
+import Tasks from "./pages/Tasks";
+import Profile from "./pages/Profile";
+import Reports from "./pages/Reports";
+import Login from "./pages/Login";
 // import { AuthProvider } from "./contexts/AuthContext";s
 
 function App() {
@@ -10,7 +18,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/income" element={<Income />} />
+        <Route path="/schedule" element={<Tasks />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </BrowserRouter>
   );

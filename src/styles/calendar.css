@@ -1,0 +1,67 @@
+/* Light Mode */
+.rbc-calendar {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  height: 100%;
+}
+
+.rbc-header {
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 8px 0;
+}
+
+.rbc-day-bg + .rbc-day-bg,
+.rbc-header + .rbc-header {
+  border-left: 1px solid var(--color-border);
+}
+
+.rbc-month-view {
+  border: 1px solid var(--color-border);
+}
+
+.rbc-today {
+  background-color: rgba(var(--color-primary), 0.1);
+}
+
+.rbc-off-range-bg {
+  background-color: var(--color-background);
+}
+
+/* Dark Mode Overrides */
+.dark .rbc-calendar {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.dark .rbc-header {
+  color: var(--color-text);
+}
+
+.dark .rbc-month-row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dark .rbc-day-bg {
+  background-color: var(--color-surface);
+}
+
+.dark .rbc-off-range-bg {
+  background-color: var(--color-background);
+}
+
+.dark .rbc-time-header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dark .rbc-time-content {
+  border-top: 1px solid var(--color-border);
+}
+
+.dark .rbc-timeslot-group {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dark .rbc-time-gutter {
+  color: var(--color-text-muted);
+}
