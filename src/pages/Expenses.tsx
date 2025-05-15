@@ -5,6 +5,7 @@ import AddCategoryModal from "../components/finance/AddCategoryModal";
 import Button from "../components/ui/Button";
 import FilterDropdown from "../components/ui/FilterDropdown";
 import Navbar from "../components/nav/Navbar";
+import { Helmet } from "react-helmet";
 
 export default function Expenses() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -14,6 +15,9 @@ export default function Expenses() {
 
   return (
     <div className="min-h-screen bg-background text-text">
+      <Helmet>
+        <title>Expenses | Financy</title>
+      </Helmet>
       <Navbar />
       {/* Header */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
@@ -32,10 +36,9 @@ export default function Expenses() {
                   onClick={() => setIsCategoryModalOpen(true)}
                   className="flex items-center gap-2 border border-primary"
                 >
-                  + Category
+                  Add Category
                 </Button>
                 <Button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-2">
-                  <PlusIcon className="h-4 w-4" />
                   Add Expense
                 </Button>
               </div>

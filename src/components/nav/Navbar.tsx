@@ -9,6 +9,7 @@ import {
   CalendarIcon,
   WalletIcon,
   Cog6ToothIcon,
+  PresentationChartBarIcon,
   UserCircleIcon,
   UserIcon,
   ArrowLeftOnRectangleIcon,
@@ -132,12 +133,12 @@ export default function Navbar() {
                         Your Profile
                       </Link>
                       <Link
-                        to="/settings"
+                        to="/reports"
                         className="flex px-4 py-2 text-sm text-text hover:bg-background/80 transition-colors items-center gap-2"
                         onClick={() => setDropdownOpen(false)}
                       >
-                        <Cog6ToothIcon className="w-4 h-4" />
-                        Settings
+                        <PresentationChartBarIcon className="w-4 h-4" />
+                        Reports
                       </Link>
                       <button
                         onClick={() => {
@@ -206,12 +207,12 @@ export default function Navbar() {
                   Your Profile
                 </Link>
                 <Link
-                  to="/settings"
+                  to="/reports"
                   className="flex px-3 py-3 text-base text-text hover:bg-background/80 transition-colors items-center gap-3 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Cog6ToothIcon className="w-5 h-5" />
-                  Settings
+                  <PresentationChartBarIcon className="w-5 h-5" />
+                  Reports
                 </Link>
                 <div className="px-3 py-3 flex items-center justify-between rounded-md hover:bg-background/80">
                   <span className="text-base text-text flex items-center gap-3">

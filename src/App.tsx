@@ -8,6 +8,9 @@ import Signup from "./pages/Signup";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
 import Tasks from "./pages/Tasks";
+import Profile from "./pages/Profile";
+import Reports from "./pages/Reports";
+import Login from "./pages/Login";
 // import { AuthProvider } from "./contexts/AuthContext";s
 
 function App() {
@@ -15,21 +18,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        {/* <Route path="/login" element={<Login />} /> */}
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
-        {/* <Route path="/reset-password/:token" element={<ResetPassword />} /> */}
-        {/* <Route path="/profile" element={<Profile />} /> */}
-        {/* <Route path="/settings" element={<Settings />} /> */}
-        {/* <Route path="/transactions" element={<Transactions />} /> */}
-        {/* <Route path="/reports" element={<Reports />} /> */}
-        {/* <Route path="/budget" element={<Budget />} /> */}
-        {/* <Route path="/goals" element={<Goals />} /> */}
-        {/* <Route path="/notifications" element={<Notifications />} /> */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/Expenses" element={<Expenses />} />
-        <Route path="/Income" element={<Income />} />
-        <Route path="/Schedule" element={<Tasks />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/income" element={<Income />} />
+        <Route path="/schedule" element={<Tasks />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-
+import darkImage from "../../assets/images/dark.png";
+import lightImage from "../../assets/images/light.png";
 export default function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-background">
@@ -47,7 +48,10 @@ export default function HeroSection() {
           className="mt-16 rounded-2xl shadow-2xl border border-border overflow-hidden mx-auto max-w-4xl"
         >
           <div className="aspect-video bg-gradient-to-br from-surface to-background flex items-center justify-center">
-            <span className="text-text-muted">Dashboard Preview</span>
+            <>
+              <img src={lightImage} alt="Dashboard Light" className="w-fit h-fit object-cover z-10 dark:hidden" />
+              <img src={darkImage} alt="Dashboard Dark" className="w-fit h-fit object-cover z-10 hidden dark:block" />
+            </>
           </div>
         </motion.div>
       </div>

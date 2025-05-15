@@ -7,12 +7,16 @@ import {
   UpcomingBills,
 } from "../components/dashboard";
 import Navbar from "../components/nav/Navbar";
+import { Helmet } from "react-helmet";
 
 export default function Dashboard() {
   const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background text-text">
+      <Helmet>
+        <title>Dashboard | Financy</title>
+      </Helmet>
       {/* Header */}
       <Navbar />
       <header className="bg-surface border-b border-border/50">

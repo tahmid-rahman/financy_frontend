@@ -1,16 +1,24 @@
 import { ReactNode } from "react";
+import { Spinner } from "./Spinner";
 
 type ButtonProps = {
   children: ReactNode;
   variant?: "primary" | "secondary" | "ghost" | "ghostAccent" | "accent" | "delete";
   disabled?: boolean;
-  loading?: boolean;
+  isLoading?: boolean;
   size?: "sm" | "md";
   className?: string;
   onClick?: () => void;
 };
 
-export default function Button({ children, variant = "primary", size = "md", className = "", ...props }: ButtonProps) {
+export default function Button({
+  children,
+  variant = "primary",
+  size = "md",
+  className = "",
+  isLoading = false,
+  ...props
+}: ButtonProps) {
   const baseStyles = "rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50";
 
   const sizeStyles = {
@@ -29,7 +37,14 @@ export default function Button({ children, variant = "primary", size = "md", cla
 
   return (
     <button className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`} {...props}>
-      {children}
+      {isLoading ? (
+        <span className="flex items-center justify-center gap-2">
+          <Spinner className="" />
+          Processing...
+        </span>
+      ) : (
+        <span>{children}</span>
+      )}
     </button>
   );
 }
