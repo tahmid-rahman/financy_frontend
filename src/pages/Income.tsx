@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import FilterDropdown from "../components/ui/FilterDropdown";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
+import { Footer } from "../components/nav";
 
 export default function Income() {
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -57,7 +58,7 @@ export default function Income() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-6">
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 mb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Income List (2/3 width) */}
           <div className="lg:col-span-2">
@@ -89,7 +90,7 @@ export default function Income() {
           </div>
         </div>
       </main>
-
+      <Footer />
       {/* Modals */}
       <AddIncomeModal
         isOpen={isIncomeModalOpen}
@@ -107,13 +108,5 @@ export default function Income() {
         }}
       />
     </div>
-  );
-}
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-    </svg>
   );
 }

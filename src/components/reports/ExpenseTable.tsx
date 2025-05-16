@@ -139,7 +139,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
                     {data.columns.map((column) => (
                       <div
                         key={`${row.id}-${column.key}`}
-                        className={`flex-shrink-0 px-4 py-2 text-sm border-r border-border ${
+                        className={`flex-shrink-0 px-4 py-2 text-sm border border-border ${
                           column.align === "right" ? "text-right" : ""
                         }`}
                         style={{ width: column.width }}

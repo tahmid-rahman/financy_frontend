@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../contexts/AuthContext";
 import ThemeToggle from "../ThemeToggle";
+import React from "react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -121,7 +122,6 @@ export default function Navbar() {
                   >
                     <div className="py-1">
                       <div className="px-4 py-2 text-sm text-text-muted border-b border-border/50">
-                        {/* Signed in as <span className="font-medium text-text">{user?.email}</span> */}
                         Signed in as <span className="font-medium text-text">{user?.name}</span>
                       </div>
                       <Link
@@ -170,7 +170,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden bg-surface shadow-lg animate-in slide-in-from-top-2">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+            {/* <div className="px-2 pt-2 pb-3 space-y-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -186,7 +186,7 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
-            </div>
+            </div> */}
             <div className="pt-4 pb-3 border-t border-border/70">
               <div className="flex items-center px-5 pb-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -194,7 +194,6 @@ export default function Navbar() {
                 </div>
                 <div className="ml-3">
                   <div className="text-sm font-medium text-text">{user?.name || "Account"}</div>
-                  {/* <div className="text-xs text-text-muted">{user?.email}</div> */}
                 </div>
               </div>
               <div className="mt-1 px-2 space-y-1">
@@ -239,6 +238,28 @@ export default function Navbar() {
 
       {/* Spacer for fixed navbar */}
       <div className="h-16"></div>
+
+      {/* Mobile Bottom Navigation - Added this new section */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-40">
+        <div className="flex justify-around">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              className={`flex flex-col items-center py-3 px-4 text-xs font-medium transition-colors ${
+                location.pathname === link.path ? "text-primary" : "text-text-muted"
+              }`}
+            >
+              <div className="w-6 h-6">
+                {React.cloneElement(link.icon, {
+                  className: `w-full h-full ${location.pathname === link.path ? "stroke-2" : ""}`,
+                })}
+              </div>
+              <span className="mt-1">{link.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
     </>
   );
 }
