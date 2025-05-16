@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import FilterDropdown from "../components/ui/FilterDropdown";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
+import { Footer } from "../components/nav";
 
 export default function Expenses() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -20,7 +21,7 @@ export default function Expenses() {
       </Helmet>
       <Navbar />
       {/* Header */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 ">
         <div className="bg-surface border border-border/50 rounded-lg p-5">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -48,7 +49,7 @@ export default function Expenses() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-6">
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 mb-16 sm:mb-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Expense List (2/3 width) */}
           <div className="lg:col-span-2">
@@ -80,7 +81,7 @@ export default function Expenses() {
           </div>
         </div>
       </main>
-
+      <Footer />
       {/* Modals */}
       <AddExpenseModal
         isOpen={isExpenseModalOpen}
@@ -98,13 +99,5 @@ export default function Expenses() {
         }}
       />
     </div>
-  );
-}
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-    </svg>
   );
 }

@@ -4,6 +4,7 @@ import ExpenseTable from "../components/reports/ExpenseTable";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
+import { Footer } from "../components/nav";
 
 export default function Reports() {
   const [selectedMonth, setSelectedMonth] = useState<string>(
@@ -78,11 +79,12 @@ export default function Reports() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-16 sm:mb-0">
         <div className="">
           {activeTab === "income" ? <IncomeTable month={selectedMonth} /> : <ExpenseTable month={selectedMonth} />}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

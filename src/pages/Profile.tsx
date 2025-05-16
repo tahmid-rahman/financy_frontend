@@ -5,6 +5,7 @@ import ProfileSection from "../components/profile/ProfileSection";
 import SettingsSection from "../components/profile/SettingsSection";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
+import { Footer } from "../components/nav";
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState<"profile" | "settings">("profile");
@@ -34,9 +35,10 @@ export default function Profile() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-6">
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 mb-16 sm:mb-0">
         {activeTab === "profile" ? <ProfileSection /> : <SettingsSection />}
       </main>
+      <Footer />
     </div>
   );
 }
