@@ -11,6 +11,8 @@ import Tasks from "./pages/Tasks";
 import Profile from "./pages/Profile";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
+import Pricing from "./pages/Pricing";
+import NotFound from "./pages/404";
 // import { AuthProvider } from "./contexts/AuthContext";s
 
 function App() {
@@ -18,6 +20,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -26,6 +29,7 @@ function App() {
         <Route path="/schedule" element={<Tasks />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
