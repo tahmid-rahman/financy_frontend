@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPhone } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 
 const signupSchema = z
   .object({
     name: z.string().min(2, { message: "Name must be at least 2 characters" }),
     email: z.string().email({ message: "Invalid email address" }),
+    phone: z
+      .string()
+      .min(10, { message: "Phone number must be at least 10 digits" })
+      .regex(/^\d{10}$/, { message: "Phone number must be exactly 10 digit" }),
     password: z
       .string()
       .min(6, { message: "Password must be at least 6 characters" })
@@ -26,8 +33,11 @@ const signupSchema = z
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export const SignupForm = () => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -38,9 +48,25 @@ export const SignupForm = () => {
     resolver: zodResolver(signupSchema),
   });
 
-  const onSubmit = (data: SignupFormData) => {
-    console.log(data);
-    // API integration would go here
+  const onSubmit = async (data: SignupFormData) => {
+    setIsLoading(true);
+    try {
+      await registerUser({
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        password: data.password,
+      });
+      showToast({ message: "Account created successfully! Please login.", type: "success" });
+      navigate("/login");
+    } catch (err: any) {
+      showToast({
+        message: err?.message || err?.detail || "Registration failed. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const password = watch("password");
@@ -91,6 +117,31 @@ export const SignupForm = () => {
             />
           </div>
           {errors.email && <span className="text-xs text-red-500 mt-1 block">{errors.email.message}</span>}
+        </motion.div>
+
+        {/* Phone Field */}
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-primary">
+              <FiPhone />
+            </div>
+            <div className="flex items-center">
+              <select
+                name="phonePrefix"
+                id=""
+                className="bg-transparent border-b border-border focus:border-primary focus:outline-none text-text pr-2 py-3.5 pl-10"
+              >
+                <option value="+880">+880</option>
+              </select>
+              <input
+                type="tel"
+                {...register("phone")}
+                placeholder="phone (10 digits)"
+                className="w-full pl-4 pr-4 py-3 bg-transparent border-b border-border focus:border-primary focus:outline-none transition-colors text-text"
+              />
+            </div>
+          </div>
+          {errors.phone && <span className="text-xs text-red-500 mt-1 block">{errors.phone.message}</span>}
         </motion.div>
 
         {/* Password Field */}
@@ -163,11 +214,11 @@ export const SignupForm = () => {
       >
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary to-accent text-white rounded-lg shadow-lg hover:shadow-primary/30 transition-all group"
-          disabled={Object.keys(errors).length > 0}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary to-accent text-white rounded-lg shadow-lg hover:shadow-primary/30 transition-all group disabled:opacity-50"
+          disabled={isLoading || Object.keys(errors).length > 0}
         >
-          <span>Create Account</span>
-          <FiArrowRight className="ml-1 group-hover:translate-x-1 transition-transform" />
+          <span>{isLoading ? "Creating account..." : "Create Account"}</span>
+          {!isLoading && <FiArrowRight className="ml-1 group-hover:translate-x-1 transition-transform" />}
         </button>
       </motion.div>
 

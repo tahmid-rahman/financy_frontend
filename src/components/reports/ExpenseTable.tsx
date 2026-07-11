@@ -1,70 +1,61 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getExpenses, getCategories } from "../../services/api";
+
+type Expense = {
+  id: number;
+  description: string;
+  amount: number;
+  category: number;
+  date: string;
+};
 
 const ExpenseTable = ({ month }: { month: string }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [categories, setCategories] = useState<Record<number, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - replace with API call
-  const data = {
-    columns: [
-      { key: "category", name: "Category", width: 180 },
-      { key: "date", name: "Date", width: 120 },
-      { key: "day", name: "Day", width: 100 },
-      { key: "description", name: "Description", width: 200 },
-      { key: "amount", name: "Amount", width: 120, align: "right" },
-    ],
-    rows: [
-      {
-        id: 1,
-        date: "2023-06-05",
-        day: "Monday",
-        description: "Grocery Shopping",
-        amount: 85.32,
-        category: "Food",
-      },
-      {
-        id: 2,
-        date: "2023-06-07",
-        day: "Wednesday",
-        description: "Dinner with friends",
-        amount: 64.5,
-        category: "Food",
-      },
-      {
-        id: 3,
-        date: "2023-06-10",
-        day: "Saturday",
-        description: "Electricity Bill",
-        amount: 120.0,
-        category: "Utilities",
-      },
-      {
-        id: 4,
-        date: "2023-06-15",
-        day: "Thursday",
-        description: "Internet Subscription",
-        amount: 49.99,
-        category: "Utilities",
-      },
-      {
-        id: 5,
-        date: "2023-06-20",
-        day: "Tuesday",
-        description: "Gasoline",
-        amount: 45.75,
-        category: "Transportation",
-      },
-    ],
-  };
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        const [expensesRes, categoriesRes] = await Promise.all([getExpenses(), getCategories()]);
+
+        const expenseData: Expense[] = expensesRes.data || [];
+        const categoriesData: Record<number, string> = {};
+        (categoriesRes.data || []).forEach((c: { id: number; name: string }) => {
+          categoriesData[c.id] = c.name;
+        });
+
+        // Filter by month
+        const filtered = expenseData.filter((expense) => {
+          const expenseDate = new Date(expense.date);
+          const [year, monthNum] = month.split("-").map(Number);
+          return expenseDate.getFullYear() === year && expenseDate.getMonth() + 1 === monthNum;
+        });
+
+        setExpenses(filtered);
+        setCategories(categoriesData);
+      } catch (err) {
+        console.error("Failed to fetch expense data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [month]);
 
   // Group by category
-  const groupedData = data.rows.reduce((acc, row) => {
-    if (!acc[row.category]) {
-      acc[row.category] = [];
+  const groupedData = expenses.reduce((acc, row) => {
+    const categoryName = categories[row.category] || "Unknown";
+    if (!acc[categoryName]) {
+      acc[categoryName] = [];
     }
-    acc[row.category].push(row);
+    acc[categoryName].push(row);
     return acc;
-  }, {} as Record<string, typeof data.rows>);
+  }, {} as Record<string, Expense[]>);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => ({
@@ -73,14 +64,33 @@ const ExpenseTable = ({ month }: { month: string }) => {
     }));
   };
 
-  const totalAmount = data.rows.reduce((sum, row) => sum + row.amount, 0);
+  const totalAmount = expenses.reduce((sum, row) => sum + parseFloat(String(row.amount)), 0);
+
+  const columns = [
+    { key: "category", name: "Category", width: 180 },
+    { key: "date", name: "Date", width: 120 },
+    { key: "day", name: "Day", width: 100 },
+    { key: "description", name: "Description", width: 200 },
+    { key: "amount", name: "Amount", width: 120, align: "right" as const },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="overflow-auto rounded-lg border border-border shadow-sm animate-pulse">
+        <div className="h-12 bg-surface border-b border-border"></div>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-12 bg-background border-b border-border"></div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-auto rounded-lg border border-border shadow-sm">
       {/* Header */}
       <div className="flex bg-surface border-b border-border sticky top-0 z-10">
         <div className="w-10 flex-shrink-0 border-r border-border"></div>
-        {data.columns.map((column) => (
+        {columns.map((column) => (
           <div
             key={column.key}
             className={`flex-shrink-0 px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider`}
@@ -94,7 +104,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
       {/* Data Rows */}
       <div className="divide-y divide-border">
         {Object.entries(groupedData).map(([category, rows]) => {
-          const categoryTotal = rows.reduce((sum, row) => sum + row.amount, 0);
+          const categoryTotal = rows.reduce((sum, row) => sum + parseFloat(String(row.amount)), 0);
           return (
             <div key={category} className="">
               {/* Category Header */}
@@ -110,7 +120,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
                   )}
                 </div>
                 <div className="flex">
-                  {data.columns.map((column) => (
+                  {columns.map((column) => (
                     <div
                       key={`header-${column.key}`}
                       className={`flex-shrink-0 px-4 py-2.5 text-sm ${column.align === "right" ? "text-right" : ""}`}
@@ -120,10 +130,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
                         <span className="font-medium text-text">{category}</span>
                       ) : column.key === "amount" ? (
                         <span className="font-medium text-red-500 dark:text-red-400">
-                          {categoryTotal.toLocaleString("en-US", {
-                            style: "currency",
-                            currency: "USD",
-                          })}
+                          ৳{categoryTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </span>
                       ) : null}
                     </div>
@@ -136,7 +143,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
                 rows.map((row) => (
                   <div key={row.id} className="flex hover:bg-surface-hover transition-colors duration-150">
                     <div className="w-10 flex-shrink-0 border-r border-border"></div>
-                    {data.columns.map((column) => (
+                    {columns.map((column) => (
                       <div
                         key={`${row.id}-${column.key}`}
                         className={`flex-shrink-0 px-4 py-2 text-sm border border-border ${
@@ -148,17 +155,16 @@ const ExpenseTable = ({ month }: { month: string }) => {
                           <span className="text-text-muted">{new Date(row.date).toLocaleDateString()}</span>
                         ) : column.key === "amount" ? (
                           <span className="text-red-500 dark:text-red-400">
-                            {row.amount.toLocaleString("en-US", {
-                              style: "currency",
-                              currency: "USD",
-                            })}
+                            ৳{parseFloat(String(row.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                           </span>
                         ) : column.key === "day" ? (
-                          <span className="text-text-muted">{row.day}</span>
+                          <span className="text-text-muted">
+                            {new Date(row.date).toLocaleDateString("en-US", { weekday: "long" })}
+                          </span>
                         ) : column.key === "description" ? (
-                          <span className="text-text">{row.description}</span>
+                          <span className="text-text">{row.description || "-"}</span>
                         ) : (
-                          <span className="text-text">{row[column.key as keyof typeof row]}</span>
+                          <span className="text-text">{String(row[column.key as keyof Expense])}</span>
                         )}
                       </div>
                     ))}
@@ -172,7 +178,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
       {/* Total Row */}
       <div className="flex bg-surface border-t-2 border-border font-medium">
         <div className="w-10 flex-shrink-0 border-r border-border"></div>
-        {data.columns.map((column) => (
+        {columns.map((column) => (
           <div
             key={`total-${column.key}`}
             className={`flex-shrink-0 px-4 py-3 text-sm ${
@@ -187,10 +193,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
             {column.key === "description"
               ? "Total Expenses"
               : column.key === "amount"
-              ? totalAmount.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })
+              ? `৳${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
               : null}
           </div>
         ))}
@@ -200,48 +203,56 @@ const ExpenseTable = ({ month }: { month: string }) => {
 };
 
 const ExpenseByDateTable = ({ month }: { month: string }) => {
-  // Mock data - replace with API call
-  const data = {
-    rows: [
-      {
-        id: 1,
-        date: "2023-06-05",
-        amount: 85.32,
-      },
-      {
-        id: 2,
-        date: "2023-06-07",
-        amount: 64.5,
-      },
-      {
-        id: 3,
-        date: "2023-06-10",
-        amount: 120.0,
-      },
-      {
-        id: 4,
-        date: "2023-06-15",
-        amount: 49.99,
-      },
-      {
-        id: 5,
-        date: "2023-06-20",
-        amount: 45.75,
-      },
-    ],
-  };
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        const res = await getExpenses();
+        const expenseData: Expense[] = res.data || [];
+
+        // Filter by month
+        const filtered = expenseData.filter((expense) => {
+          const expenseDate = new Date(expense.date);
+          const [year, monthNum] = month.split("-").map(Number);
+          return expenseDate.getFullYear() === year && expenseDate.getMonth() + 1 === monthNum;
+        });
+
+        setExpenses(filtered);
+      } catch (err) {
+        console.error("Failed to fetch expense data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [month]);
 
   // Group by date and sum amounts
-  const groupedByDate = data.rows.reduce((acc, row) => {
+  const groupedByDate = expenses.reduce((acc, row) => {
     const dateStr = new Date(row.date).toLocaleDateString();
     if (!acc[dateStr]) {
       acc[dateStr] = 0;
     }
-    acc[dateStr] += row.amount;
+    acc[dateStr] += parseFloat(String(row.amount));
     return acc;
   }, {} as Record<string, number>);
 
-  const totalAmount = data.rows.reduce((sum, row) => sum + row.amount, 0);
+  const totalAmount = expenses.reduce((sum, row) => sum + parseFloat(String(row.amount)), 0);
+
+  if (isLoading) {
+    return (
+      <div className="overflow-auto rounded-lg border border-border shadow-sm animate-pulse">
+        <div className="h-12 bg-surface border-b border-border"></div>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-10 bg-background border-b border-border"></div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-auto rounded-lg border border-border shadow-sm">
@@ -261,10 +272,7 @@ const ExpenseByDateTable = ({ month }: { month: string }) => {
           <div key={date} className="flex hover:bg-surface-hover transition-colors duration-150">
             <div className="w-1/2 px-4 py-2 text-sm text-text">{date}</div>
             <div className="w-1/2 px-4 py-2 text-sm text-right text-red-500 dark:text-red-400">
-              {amount.toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-              })}
+              ৳{amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
           </div>
         ))}
@@ -274,10 +282,7 @@ const ExpenseByDateTable = ({ month }: { month: string }) => {
       <div className="flex bg-surface border-t-2 border-border font-medium">
         <div className="w-1/2 px-4 py-3 text-sm text-text">Total</div>
         <div className="w-1/2 px-4 py-3 text-sm text-right text-red-500 dark:text-red-400">
-          {totalAmount.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
-          })}
+          ৳{totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
         </div>
       </div>
     </div>

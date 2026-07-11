@@ -1,27 +1,45 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { addCategory } from "../../services/api";
 
 export default function AddCategoryModal({
   isOpen,
   onClose,
   onAddCategory,
+  categoryNames,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onAddCategory: (category: string) => void;
+  onAddCategory: (categoryName: string) => void;
+  categoryNames: string[];
 }) {
   const [newCategory, setNewCategory] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
-    if (!newCategory.trim()) {
+  const handleSubmit = async () => {
+    const trimmed = newCategory.trim();
+    if (!trimmed) {
       setError("Category name is required");
       return;
     }
-    onAddCategory(newCategory);
-    setNewCategory("");
-    onClose();
+
+    const isDuplicate = categoryNames.some((name) => name.toLowerCase() === trimmed.toLowerCase());
+
+    if (isDuplicate) {
+      setError("Category already exists");
+      return;
+    }
+
+    try {
+      await addCategory(trimmed); // optional API call
+      onAddCategory(trimmed);
+      setNewCategory("");
+      onClose();
+    } catch (err) {
+      setError("Failed to add category. Please try again.");
+      console.error("Add Category Error:", err);
+    }
   };
 
   return (
@@ -75,9 +93,7 @@ export default function AddCategoryModal({
                     <Button variant="secondary" onClick={onClose}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSubmit} className="">
-                      Add Category
-                    </Button>
+                    <Button onClick={handleSubmit}>Add Category</Button>
                   </div>
                 </div>
               </Dialog.Panel>

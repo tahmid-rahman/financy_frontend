@@ -2,6 +2,9 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
 import { PasswordField } from "../ui/PasswordField";
+import { changePassword } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -16,6 +19,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: { isOpen: boole
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { showToast } = useToast();
+  const { updateToken } = useAuth();
 
   const validate = () => {
     const newErrors = {
@@ -33,8 +38,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: { isOpen: boole
     if (!newPassword) {
       newErrors.new = "New password is required";
       isValid = false;
-    } else if (newPassword.length < 8) {
-      newErrors.new = "Password must be at least 8 characters";
+    } else if (newPassword.length < 6) {
+      newErrors.new = "Password must be at least 6 characters";
       isValid = false;
     }
 
@@ -47,18 +52,30 @@ export default function ChangePasswordModal({ isOpen, onClose }: { isOpen: boole
     return isValid;
   };
 
-  const handleSubmit = () => {
-    if (validate()) {
-      setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        onClose();
-        // Reset form
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }, 1500);
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    setIsLoading(true);
+
+    try {
+      const res = await changePassword(currentPassword, newPassword);
+      // Update token if returned
+      if (res.token) {
+        updateToken(res.token);
+      }
+      showToast({ message: "Password changed successfully!", type: "success" });
+      // Reset form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      onClose();
+    } catch (err: any) {
+      showToast({
+        message: err?.message || "Failed to change password",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

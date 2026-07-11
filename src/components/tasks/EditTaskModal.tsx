@@ -1,32 +1,57 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { useToast } from "../../contexts/ToastContext";
 
 type EditTaskModalProps = {
   task: {
     id: number;
     title: string;
-    dueDate: string;
+    due_date: string;
     priority: "low" | "medium" | "high";
     completed: boolean;
+    start_time?: string | null;
+    end_time?: string | null;
+    all_day?: boolean;
   };
+  onClose: () => void;
   onSave: (task: EditTaskModalProps["task"]) => void;
   onDelete: (taskId: number) => void;
-  onClose: () => void;
 };
 
 export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditTaskModalProps) {
   const [title, setTitle] = useState(task.title);
-  const [dueDate, setDueDate] = useState(task.dueDate);
+  const [dueDate, setDueDate] = useState(task.due_date);
   const [priority, setPriority] = useState(task.priority);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useToast();
 
-  const handleSubmit = () => {
-    onSave({
-      ...task,
-      title,
-      dueDate,
-      priority,
-    });
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      showToast({
+        message: "Task title cannot be empty",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      onSave({
+        ...task,
+        title,
+        due_date: dueDate,
+        priority,
+      });
+    } catch (error) {
+      showToast({
+        message: "Failed to save task",
+        type: "error",
+      });
+      console.error("Error saving task:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -112,7 +137,9 @@ export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditT
                       <Button variant="secondary" onClick={onClose}>
                         Cancel
                       </Button>
-                      <Button onClick={handleSubmit}>Save Changes</Button>
+                      <Button onClick={handleSubmit} disabled={isSubmitting || !title.trim()}>
+                        {isSubmitting ? "Saving..." : "Save Changes"}
+                      </Button>
                     </div>
                   </div>
                 </div>

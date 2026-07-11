@@ -1,49 +1,50 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
-import { addSource, updateIncomeSource, deleteIncomeSource } from "../../services/api";
+import { FaTrash } from "react-icons/fa";
+import { updateCategory, deleteCategory } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
-type IncomeSource = {
+type Category = {
   id: number;
   name: string;
 };
 
 type Mode = "select" | "add" | "edit";
 
-export default function SourceManagementModal({
+export default function EditCategoryModal({
   isOpen,
   onClose,
-  sources,
-  onAddSource,
-  onEditSource,
-  onDeleteSource,
+  categories,
+  onAddCategory,
+  onEditCategory,
+  onDeleteCategory,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  sources: IncomeSource[];
-  onAddSource: (sourceName: string) => void;
-  onEditSource: (oldName: string, newName: string) => void;
-  onDeleteSource: (name: string) => void;
+  categories: Category[];
+  onAddCategory: (name: string) => void;
+  onEditCategory: (oldName: string, newName: string) => void;
+  onDeleteCategory: (name: string) => void;
 }) {
   const [mode, setMode] = useState<Mode>("select");
-  const [selectedSource, setSelectedSource] = useState<IncomeSource | null>(null);
-  const [sourceName, setSourceName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [categoryName, setCategoryName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
 
   const resetForm = () => {
     setMode("select");
-    setSelectedSource(null);
-    setSourceName("");
+    setSelectedCategory(null);
+    setCategoryName("");
     setError("");
   };
 
   const handleSubmit = async () => {
-    const trimmed = sourceName.trim();
+    const trimmed = categoryName.trim();
     if (!trimmed) {
-      setError("Source name is required");
+      setError("Category name is required");
       return;
     }
 
@@ -51,20 +52,19 @@ export default function SourceManagementModal({
     setIsLoading(true);
 
     try {
-      if (mode === "add") {
-        await addSource(trimmed);
-        showToast({ message: "Source added successfully!", type: "success" });
-        onAddSource(trimmed);
-      } else if (mode === "edit" && selectedSource) {
-        await updateIncomeSource(selectedSource.id, trimmed);
-        showToast({ message: "Source updated successfully!", type: "success" });
-        onEditSource(selectedSource.name, trimmed);
+      if (mode === "edit" && selectedCategory) {
+        await updateCategory(selectedCategory.id, trimmed);
+        showToast({ message: "Category updated successfully!", type: "success" });
+        onEditCategory(selectedCategory.name, trimmed);
+      } else if (mode === "add") {
+        // Add is handled by AddCategoryModal, just trigger callback
+        onAddCategory(trimmed);
       }
 
       resetForm();
       onClose();
     } catch (err: any) {
-      const errorMsg = err?.errors || err?.message || `Failed to ${mode === "add" ? "add" : "update"} source`;
+      const errorMsg = err?.errors || err?.message || `Failed to ${mode === "add" ? "add" : "update"} category`;
       showToast({ message: errorMsg, type: "error" });
       setError(typeof errorMsg === "string" ? errorMsg : "Operation failed");
     } finally {
@@ -73,8 +73,8 @@ export default function SourceManagementModal({
   };
 
   const handleDelete = async () => {
-    if (!selectedSource) {
-      setError("Please select a source");
+    if (!selectedCategory) {
+      setError("Please select a category");
       return;
     }
 
@@ -82,23 +82,23 @@ export default function SourceManagementModal({
     setIsLoading(true);
 
     try {
-      await deleteIncomeSource(selectedSource.id);
-      showToast({ message: "Source deleted successfully!", type: "success" });
-      onDeleteSource(selectedSource.name);
+      await deleteCategory(selectedCategory.id);
+      showToast({ message: "Category deleted successfully!", type: "success" });
+      onDeleteCategory(selectedCategory.name);
       resetForm();
       onClose();
     } catch (err: any) {
-      const errorMsg = err?.errors || err?.message || "Failed to delete source";
+      const errorMsg = err?.errors || err?.message || "Failed to delete category";
       showToast({ message: errorMsg, type: "error" });
-      setError(typeof errorMsg === "string" ? errorMsg : "Failed to delete source");
+      setError(typeof errorMsg === "string" ? errorMsg : "Failed to delete category");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSourceSelect = (src: IncomeSource) => {
-    setSelectedSource(src);
-    setSourceName(src.name);
+  const handleCategorySelect = (cat: Category) => {
+    setSelectedCategory(cat);
+    setCategoryName(cat.name);
     setError("");
   };
 
@@ -130,33 +130,30 @@ export default function SourceManagementModal({
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-surface border border-border/50 p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title as="h3" className="text-lg text-text font-medium mb-4">
-                  {mode === "select" ? "Manage Income Sources" : mode === "add" ? "Add New Source" : "Edit Source"}
+                  {mode === "select" ? "Category Management" : mode === "add" ? "Add New Category" : "Edit Category"}
                 </Dialog.Title>
 
                 {mode === "select" ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-3">
-                      <Button
-                        onClick={() => setMode("add")}
-                        className="w-full justify-center"
-                        variant="accent"
-                        isLoading={isLoading}
-                      >
-                        Add New Source
+                      <Button onClick={() => setMode("add")} className="w-full justify-center" isLoading={isLoading}>
+                        Add New Category
                       </Button>
-                      {sources.length > 0 && (
-                        <Button
-                          variant="secondary"
-                          onClick={() => setMode("edit")}
-                          className="w-full justify-center text-text-muted"
-                          isLoading={isLoading}
-                        >
-                          Edit Existing Source
-                        </Button>
+                      {categories.length > 0 && (
+                        <>
+                          <Button
+                            variant="secondary"
+                            onClick={() => setMode("edit")}
+                            className="w-full justify-center text-text-muted"
+                            isLoading={isLoading}
+                          >
+                            Edit Existing Category
+                          </Button>
+                        </>
                       )}
                     </div>
                     <div className="pt-2 flex justify-end">
-                      <Button variant="ghostAccent" onClick={onClose} disabled={isLoading}>
+                      <Button variant="ghost" onClick={onClose} disabled={isLoading}>
                         Cancel
                       </Button>
                     </div>
@@ -165,19 +162,19 @@ export default function SourceManagementModal({
                   <div className="space-y-4">
                     {mode === "edit" && (
                       <div>
-                        <label className="block text-sm text-text-muted mb-1">Select Source</label>
+                        <label className="block text-sm text-text-muted mb-1">Select Category</label>
                         <select
-                          value={selectedSource?.id || ""}
+                          value={selectedCategory?.id || ""}
                           onChange={(e) => {
-                            const src = sources.find((s) => s.id === Number(e.target.value));
-                            if (src) handleSourceSelect(src);
+                            const cat = categories.find((c) => c.id === Number(e.target.value));
+                            if (cat) handleCategorySelect(cat);
                           }}
                           className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                         >
-                          <option value="">Select a source</option>
-                          {sources.map((source) => (
-                            <option key={source.id} value={source.id}>
-                              {source.name}
+                          <option value="">Select a category</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
                             </option>
                           ))}
                         </select>
@@ -186,34 +183,36 @@ export default function SourceManagementModal({
 
                     <div>
                       <label className="block text-sm text-text-muted mb-1">
-                        {mode === "add" ? "Source Name" : "New Name"}
+                        {mode === "add" ? "Category Name" : "New Name"}
                       </label>
                       <input
                         type="text"
-                        value={sourceName}
+                        value={categoryName}
                         onChange={(e) => {
-                          setSourceName(e.target.value);
+                          setCategoryName(e.target.value);
                           setError("");
                         }}
                         className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-                        placeholder={`e.g. ${mode === "add" ? "Freelance Income" : "Enter new name"}`}
+                        placeholder={`e.g. ${mode === "add" ? "Utilities" : "Enter new name"}`}
                       />
                       {error && <p className="mt-1 text-sm text-accent">{error}</p>}
                     </div>
 
                     <div className="pt-4 flex justify-between">
                       <div>
-                        {mode === "edit" && selectedSource && (
+                        {mode === "edit" && selectedCategory && (
                           <Button variant="delete" onClick={handleDelete} isLoading={isLoading}>
-                            Delete Source
+                            <FaTrash className="inline mr-1" />
+                            Delete
                           </Button>
                         )}
                       </div>
                       <div className="flex gap-3">
                         <Button
-                          variant="ghostAccent"
+                          variant="secondary"
+                          className="text-text-muted"
                           onClick={() => {
-                            if (mode === "edit" && !selectedSource) {
+                            if (mode === "edit" && !selectedCategory) {
                               setMode("select");
                             } else {
                               resetForm();
@@ -224,12 +223,12 @@ export default function SourceManagementModal({
                           Back
                         </Button>
                         <Button
+                          variant="primary"
                           onClick={handleSubmit}
-                          variant="accent"
                           isLoading={isLoading}
-                          disabled={!sourceName.trim()}
+                          disabled={!categoryName.trim()}
                         >
-                          {mode === "add" ? "Add Source" : "Save Changes"}
+                          {mode === "add" ? "Add Category" : "Save Changes"}
                         </Button>
                       </div>
                     </div>

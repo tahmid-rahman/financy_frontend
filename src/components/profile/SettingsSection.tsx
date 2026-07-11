@@ -1,12 +1,58 @@
 import { Switch } from "@headlessui/react";
 import Button from "../ui/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function SettingsSection() {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("BDT");
   const [language, setLanguage] = useState("English");
+  const [isSaving, setIsSaving] = useState(false);
+  const { showToast } = useToast();
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem("darkMode");
+    const savedNotifications = localStorage.getItem("notifications");
+    const savedCurrency = localStorage.getItem("currency");
+    const savedLanguage = localStorage.getItem("language");
+
+    if (savedDarkMode !== null) setDarkMode(savedDarkMode === "true");
+    if (savedNotifications !== null) setNotifications(savedNotifications !== "false");
+    if (savedCurrency) setCurrency(savedCurrency);
+    if (savedLanguage) setLanguage(savedLanguage);
+  }, []);
+
+  // Apply dark mode to document
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("darkMode", String(darkMode));
+  }, [darkMode]);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    // Settings are already saved to localStorage via useEffect
+    setTimeout(() => {
+      setIsSaving(false);
+      showToast({ message: "Settings saved successfully!", type: "success" });
+    }, 500);
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setCurrency(value);
+    localStorage.setItem("currency", value);
+  };
+
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value);
+    localStorage.setItem("language", value);
+  };
+
+  const handleNotificationsChange = (value: boolean) => {
+    setNotifications(value);
+    localStorage.setItem("notifications", String(value));
+  };
 
   return (
     <div className="bg-surface border border-border/50 rounded-lg p-6">
@@ -44,7 +90,7 @@ export default function SettingsSection() {
           <div className="flex items-center gap-4">
             <Switch
               checked={notifications}
-              onChange={setNotifications}
+              onChange={handleNotificationsChange}
               className={`${notifications ? "bg-primary" : "bg-border"}
                 relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
             >
@@ -65,13 +111,13 @@ export default function SettingsSection() {
           </div>
           <select
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
+            onChange={(e) => handleCurrencyChange(e.target.value)}
             className="px-4 py-2 bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none sm:w-40"
           >
+            <option value="BDT">BDT (৳)</option>
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
             <option value="GBP">GBP (£)</option>
-            <option value="BDT">BDT (৳)</option>
           </select>
         </div>
 
@@ -83,7 +129,7 @@ export default function SettingsSection() {
           </div>
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => handleLanguageChange(e.target.value)}
             className="px-4 py-2 bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none sm:w-40"
           >
             <option value="English">English</option>
@@ -108,7 +154,9 @@ export default function SettingsSection() {
 
         {/* Save Button */}
         <div className="flex justify-end pt-6 border-t border-border/50">
-          <Button className="w-full sm:w-auto">Save Settings</Button>
+          <Button onClick={handleSave} isLoading={isSaving} className="w-full sm:w-auto">
+            Save Settings
+          </Button>
         </div>
       </div>
     </div>

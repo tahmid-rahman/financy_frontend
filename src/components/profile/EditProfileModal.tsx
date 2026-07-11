@@ -1,16 +1,19 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { updateProfile } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function EditProfileModal({
   isOpen,
   onClose,
   initialData = {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
   },
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -20,22 +23,38 @@ export default function EditProfileModal({
     email: string;
     phone: string;
   };
+  onSuccess?: () => void;
 }) {
   const [formData, setFormData] = useState(initialData);
   const [isLoading, setIsLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      await updateProfile({
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone,
+      });
+      showToast({ message: "Profile updated successfully!", type: "success" });
+      onSuccess?.();
       onClose();
-    }, 1000);
+    } catch (err: any) {
+      showToast({
+        message: err?.message || "Failed to update profile",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -102,7 +121,9 @@ export default function EditProfileModal({
                       value={formData.email}
                       onChange={handleChange}
                       className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      disabled
                     />
+                    <p className="text-xs text-text-muted mt-1">Email cannot be changed</p>
                   </div>
 
                   <div>

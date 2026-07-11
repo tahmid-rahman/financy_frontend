@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
@@ -6,6 +7,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "../../contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -15,19 +17,27 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export const LoginForm = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log(data);
-    // API integration would go here
+  const onSubmit = async (data: LoginFormData) => {
+    setApiError(null);
+    try {
+      await login(data.email, data.password);
+      navigate("/dashboard");
+    } catch (error: any) {
+      setApiError(error?.response?.data?.detail || "Login failed");
+    }
   };
 
   return (
@@ -44,7 +54,6 @@ export const LoginForm = () => {
         </motion.h2>
         <p className="mt-2 text-text-muted">Sign in to continue your financial journey</p>
       </div>
-
       {/* Form Fields */}
       <div className="space-y-6">
         {/* Email Field */}
@@ -101,7 +110,11 @@ export const LoginForm = () => {
           </a>
         </motion.div>
       </div>
-
+      {apiError && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 text-sm mb-4">
+          {apiError}
+        </motion.div>
+      )}
       {/* Submit Button */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -111,10 +124,10 @@ export const LoginForm = () => {
       >
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary to-accent text-white rounded-lg shadow-lg hover:shadow-primary/30 transition-all group"
-          disabled={Object.keys(errors).length > 0}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary to-accent text-white rounded-lg shadow-lg hover:shadow-primary/30 transition-all group disabled:opacity-50"
+          disabled={isSubmitting}
         >
-          <span>Sign In</span>
+          <span>{isSubmitting ? "Signing in..." : "Sign In"}</span>
           <FiArrowRight className="ml-1 group-hover:translate-x-1 transition-transform" />
         </button>
       </motion.div>

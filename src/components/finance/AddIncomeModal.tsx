@@ -1,19 +1,62 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { createIncome } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
+
+type IncomeSource = {
+  id: number;
+  name: string;
+};
 
 export default function AddIncomeModal({
   isOpen,
   onClose,
   incomeSources,
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  incomeSources: string[];
+  incomeSources: IncomeSource[];
+  onSuccess?: () => void;
 }) {
   const [amount, setAmount] = useState("");
-  const [source, setSource] = useState(incomeSources[0] || "");
+  const [sourceId, setSourceId] = useState<number>(incomeSources[0]?.id || 0);
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { showToast } = useToast();
+
+  const handleSubmit = async () => {
+    if (!amount || !sourceId) {
+      setError("Amount and source are required");
+      return;
+    }
+
+    setError("");
+    setIsLoading(true);
+
+    try {
+      await createIncome({
+        amount,
+        description,
+        source: sourceId,
+      });
+      showToast({ message: "Income added successfully!", type: "success" });
+      // Reset form
+      setAmount("");
+      setDescription("");
+      setSourceId(incomeSources[0]?.id || 0);
+      onSuccess?.();
+      onClose();
+    } catch (err: any) {
+      const errorMsg = err?.errors || err?.message || "Failed to add income";
+      showToast({ message: errorMsg, type: "error" });
+      setError(typeof errorMsg === "string" ? errorMsg : "Failed to add income");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -65,7 +108,10 @@ export default function AddIncomeModal({
                       <input
                         type="number"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          setError("");
+                        }}
                         className="w-full pl-8 pr-4 py-2 bg-background text-text border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                         placeholder="0.00"
                       />
@@ -75,28 +121,30 @@ export default function AddIncomeModal({
                   <div>
                     <label className="block text-sm text-text-muted mb-1">Source</label>
                     <select
-                      value={source}
-                      onChange={(e) => setSource(e.target.value)}
-                      className="w-full px-4 py-2 bg-background text-text border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      value={sourceId}
+                      onChange={(e) => setSourceId(Number(e.target.value))}
+                      className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                     >
+                      {incomeSources.length === 0 && <option value="">No sources available</option>}
                       {incomeSources.map((src) => (
-                        <option key={src} value={src}>
-                          {src}
+                        <option key={src.id} value={src.id}>
+                          {src.name}
                         </option>
                       ))}
                     </select>
                   </div>
 
+                  {error && <p className="text-sm text-accent">{error}</p>}
+
                   <div className="pt-4 flex text-text justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose}>
+                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
                       Cancel
                     </Button>
                     <Button
                       variant="accent"
-                      onClick={() => {
-                        // Handle save logic
-                        onClose();
-                      }}
+                      onClick={handleSubmit}
+                      isLoading={isLoading}
+                      disabled={!amount || !sourceId}
                     >
                       Add Income
                     </Button>
