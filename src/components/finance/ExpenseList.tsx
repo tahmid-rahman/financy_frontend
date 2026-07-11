@@ -1,49 +1,63 @@
 import { ArrowDownIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import { getExpenses } from "../../services/api";
 
 type Expense = {
   id: number;
   description: string;
   amount: number;
-  category: string;
+  category: number;
+  category_name?: string;
   date: string;
 };
 
 type ExpenseListProps = {
   filter: string;
-  categories: string[];
+  categories: { id: number; name: string }[];
 };
 
-const mockExpenses: Expense[] = [
-  {
-    id: 1,
-    description: "Grocery Shopping",
-    amount: 85.32,
-    category: "food",
-    date: "Today, 10:45 AM",
-  },
-  {
-    id: 2,
-    description: "Electric Bill",
-    amount: 65.5,
-    category: "bills",
-    date: "Jun 12",
-  },
-  {
-    id: 3,
-    description: "Uber Ride",
-    amount: 22.4,
-    category: "transport",
-    date: "Jun 10",
-  },
-];
-
 export default function ExpenseList({ filter, categories }: ExpenseListProps) {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchExpenses() {
+      try {
+        setIsLoading(true);
+        const res = await getExpenses();
+        const expenseData = res.data || [];
+        setExpenses(expenseData);
+      } catch (err) {
+        console.error("Failed to load expenses", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchExpenses();
+  }, []);
+
+  // Build category map for display
+  const categoryMap: Record<number, string> = {};
+  categories.forEach((c) => {
+    categoryMap[c.id] = c.name;
+  });
+
   const filteredExpenses =
     filter.toLowerCase() === "all"
-      ? mockExpenses
-      : mockExpenses.filter((exp) =>
-          categories.some((cat) => cat.toLowerCase() === filter.toLowerCase() && exp.category === filter.toLowerCase())
-        );
+      ? expenses
+      : expenses.filter((exp) => {
+          const catName = categoryMap[exp.category] || "";
+          return catName.toLowerCase() === filter.toLowerCase();
+        });
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface border border-border/50 rounded-lg overflow-hidden p-8 text-center text-text-muted">
+        Loading expenses...
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface border border-border/50 rounded-lg overflow-hidden">
@@ -62,13 +76,17 @@ export default function ExpenseList({ filter, categories }: ExpenseListProps) {
                     <ArrowDownIcon className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{expense.description}</p>
+                    <p className="font-medium text-sm">{expense.description || "No description"}</p>
                     <p className="text-xs text-text-muted capitalize">
-                      {expense.category} • {expense.date}
+                      {categoryMap[expense.category] || "uncategorized"} •{" "}
+                      {new Date(expense.date).toLocaleString("en-US", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
                     </p>
                   </div>
                 </div>
-                <p className="text-accent font-medium">-৳{expense.amount.toFixed(2)}</p>
+                <p className="text-accent font-medium">-৳{Number(expense.amount).toFixed(2)}</p>
               </div>
             </li>
           ))}

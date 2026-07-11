@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import IncomeList from "../components/finance/IncomeList";
 import AddIncomeModal from "../components/finance/AddIncomeModal";
 import AddIncomeSourceModal from "../components/finance/AddIncomeSourceModal";
@@ -7,12 +7,46 @@ import FilterDropdown from "../components/ui/FilterDropdown";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
 import { Footer } from "../components/nav";
+import { getIncomeSources } from "../services/api";
 
 export default function Income() {
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
-  const [incomeSources, setIncomeSources] = useState(["Salary", "Freelance", "Investments", "Gifts"]);
+  const [incomeSources, setIncomeSources] = useState<{ id: number; name: string }[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    async function fetchSources() {
+      try {
+        const data = await getIncomeSources();
+        setIncomeSources(data.data || []);
+      } catch (err) {
+        console.error("Failed to load income sources", err);
+      }
+    }
+    fetchSources();
+  }, []);
+
+  const sourceNames = incomeSources.map((s) => s.name);
+
+  const handleIncomeSuccess = () => {
+    setRefreshKey((k) => k + 1);
+  };
+
+  const handleAddSource = (newSource: string) => {
+    if (!sourceNames.includes(newSource)) {
+      setIncomeSources([...incomeSources, { id: Date.now(), name: newSource }]);
+    }
+  };
+
+  const handleEditSource = (oldName: string, newName: string) => {
+    setIncomeSources(incomeSources.map((src) => (src.name === oldName ? { ...src, name: newName } : src)));
+  };
+
+  const handleDeleteSource = (name: string) => {
+    setIncomeSources(incomeSources.filter((src) => src.name !== name));
+  };
 
   return (
     <div className="min-h-screen bg-background text-text">
@@ -30,7 +64,7 @@ export default function Income() {
             </div>
             <div className="flex gap-3 w-full sm:w-auto">
               <FilterDropdown
-                options={["All", ...incomeSources]}
+                options={["All", ...sourceNames]}
                 activeOption={activeFilter}
                 onSelect={setActiveFilter}
               />
@@ -41,7 +75,7 @@ export default function Income() {
                   onClick={() => setIsSourceModalOpen(true)}
                   className="flex items-center border border-accent"
                 >
-                  Add Source
+                  Edit Source
                 </Button>
                 <Button
                   variant="accent"
@@ -62,7 +96,11 @@ export default function Income() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Income List (2/3 width) */}
           <div className="lg:col-span-2">
-            <IncomeList filter={activeFilter} incomeSources={incomeSources} />
+            <IncomeList
+              key={refreshKey}
+              filter={activeFilter}
+              incomeSources={incomeSources}
+            />
           </div>
 
           {/* Summary Card (1/3 width) */}
@@ -71,19 +109,19 @@ export default function Income() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-text-muted">Total Income</span>
-                <span className="font-medium">৳4,245.60</span>
+                <span className="font-medium">৳0.00</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Primary Source</span>
-                <span className="font-medium">Salary (62%)</span>
+                <span className="font-medium">-</span>
               </div>
               <div className="pt-4 border-t border-border/50">
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-text-muted">Projected Monthly</span>
-                  <span className="text-sm font-medium">৳4,800.00</span>
+                  <span className="text-sm font-medium">৳0.00</span>
                 </div>
                 <div className="w-full bg-background rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: "88%" }} />
+                  <div className="bg-green-500 h-2 rounded-full" style={{ width: "0%" }} />
                 </div>
               </div>
             </div>
@@ -96,16 +134,16 @@ export default function Income() {
         isOpen={isIncomeModalOpen}
         onClose={() => setIsIncomeModalOpen(false)}
         incomeSources={incomeSources}
+        onSuccess={handleIncomeSuccess}
       />
 
       <AddIncomeSourceModal
         isOpen={isSourceModalOpen}
         onClose={() => setIsSourceModalOpen(false)}
-        onAddSource={(newSource) => {
-          if (!incomeSources.includes(newSource)) {
-            setIncomeSources([...incomeSources, newSource]);
-          }
-        }}
+        sources={incomeSources}
+        onAddSource={handleAddSource}
+        onEditSource={handleEditSource}
+        onDeleteSource={handleDeleteSource}
       />
     </div>
   );

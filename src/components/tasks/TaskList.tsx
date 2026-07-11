@@ -6,57 +6,121 @@ import {
   EllipsisHorizontalIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditTaskModal from "./EditTaskModal";
+import { getTasks, updateTask, deleteTask } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 
 type Task = {
   id: number;
   title: string;
-  dueDate: string;
+  due_date: string;
   priority: "low" | "medium" | "high";
   completed: boolean;
+  start_time?: string | null;
+  end_time?: string | null;
+  all_day?: boolean;
 };
 
-const mockTasks: Task[] = [
-  {
-    id: 1,
-    title: "Complete project proposal",
-    dueDate: "2023-06-20",
-    priority: "high",
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "Complete project proposal the second time",
-    dueDate: "2023-06-22",
-    priority: "medium",
-    completed: true,
-  },
-  // ...other tasks
-];
-
 export default function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
-  const toggleTaskCompletion = (taskId: number) => {
-    setTasks(tasks.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task)));
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getTasks();
+      setTasks(response.data);
+    } catch (error) {
+      showToast({
+        message: "Failed to fetch tasks",
+        type: "error",
+      });
+      console.error("Error fetching tasks:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditTask = (updatedTask: Task) => {
-    setTasks(tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)));
-    setEditingTask(null);
+  const toggleTaskCompletion = async (taskId: number) => {
+    try {
+      const taskToUpdate = tasks.find((task) => task.id === taskId);
+      if (!taskToUpdate) return;
+
+      const updatedTask = await updateTask(taskId, {
+        completed: !taskToUpdate.completed,
+      });
+
+      setTasks(tasks.map((task) => (task.id === taskId ? updatedTask : task)));
+
+      showToast({
+        message: `Task marked as ${updatedTask.completed ? "completed" : "incomplete"}`,
+        type: "success",
+      });
+    } catch (error) {
+      showToast({
+        message: "Failed to update task",
+        type: "error",
+      });
+      console.error("Error updating task:", error);
+    }
   };
 
-  const handleDeleteTask = (taskId: number) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
-    setEditingTask(null);
+  const handleEditTask = async (updatedTask: Task) => {
+    try {
+      const { id, ...updates } = updatedTask;
+      const response = await updateTask(id, updates);
+
+      setTasks(tasks.map((task) => (task.id === id ? response : task)));
+
+      setEditingTask(null);
+      showToast({
+        message: "Task updated successfully",
+        type: "success",
+      });
+    } catch (error) {
+      showToast({
+        message: "Failed to update task",
+        type: "error",
+      });
+      console.error("Error updating task:", error);
+    }
   };
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      setTasks(tasks.filter((task) => task.id !== taskId));
+      setEditingTask(null);
+      showToast({
+        message: "Task deleted successfully",
+        type: "success",
+      });
+    } catch (error) {
+      showToast({
+        message: "Failed to delete task",
+        type: "error",
+      });
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface border border-border/50 rounded-lg overflow-hidden p-8 text-center">
+        Loading tasks...
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface border border-border/50 rounded-lg overflow-hidden">
-      {/* ...existing header code... */}
-
       {tasks.length > 0 ? (
         <ul className="divide-y divide-border/50">
           {tasks.map((task) => (
@@ -74,7 +138,7 @@ export default function TaskList() {
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <ClockIcon className="h-3 w-3 text-text-muted" />
-                    <span className="text-xs text-text-muted">Due {new Date(task.dueDate).toLocaleDateString()}</span>
+                    <span className="text-xs text-text-muted">Due {new Date(task.due_date).toLocaleDateString()}</span>
                     {task.priority === "high" && (
                       <span className="flex items-center gap-1 text-xs text-accent">
                         <ExclamationTriangleIcon className="h-3 w-3" />
@@ -93,7 +157,7 @@ export default function TaskList() {
                   >
                     <EllipsisHorizontalIcon className="h-5 w-5" />
                   </button>
-                  {/* <button
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingTask(task);
@@ -101,8 +165,8 @@ export default function TaskList() {
                     className="text-text-muted hover:text-primary"
                   >
                     <PencilSquareIcon className="h-5 w-5" />
-                  </button> */}
-                  {/* <button
+                  </button>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteTask(task.id);
@@ -110,7 +174,7 @@ export default function TaskList() {
                     className="text-text-muted hover:text-accent"
                   >
                     <TrashIcon className="h-5 w-5" />
-                  </button> */}
+                  </button>
                 </div>
               </div>
             </li>

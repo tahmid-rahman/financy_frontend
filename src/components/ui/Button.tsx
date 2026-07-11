@@ -30,8 +30,8 @@ export default function Button({
     primary: "bg-primary text-surface hover:bg-primary-dark",
     secondary: "bg-surface border border-border hover:bg-background",
     ghost: "text-primary hover:bg-primary/10",
-    accent: "bg-accent hover:bg-accent-dark text-white",
-    ghostAccent: "text-accent hover:bg-accent/10",
+    accent: "bg-accent hover:bg-accent-dark text-white hover:bg-accent/80",
+    ghostAccent: "text-accent hover:bg-accent/10 border border-accent/30",
     delete: "bg-red-500 hover:bg-red-600 text-white",
   };
 

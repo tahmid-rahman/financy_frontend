@@ -1,11 +1,64 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { createTask } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [allDay, setAllDay] = useState(false);
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [error, setError] = useState("");
+  const { showToast } = useToast();
+  const isTimeInvalid = !allDay && startTime && endTime && startTime >= endTime;
+
+  const handleSubmit = async () => {
+    if (isTimeInvalid) {
+      showToast({
+        message: "End time must be after start time",
+        type: "error",
+      });
+      return;
+    }
+
+    setError("");
+
+    try {
+      await createTask({
+        title,
+        due_date: dueDate,
+        start_time: allDay ? null : startTime,
+        end_time: allDay ? null : endTime,
+        all_day: allDay,
+        priority,
+      });
+      showToast({
+        message: "Task created successfully!",
+        type: "success",
+      });
+      onClose();
+    } catch (error) {
+      showToast({
+        message: "Failed to create task. Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleTimeChange = (type: "start" | "end", value: string) => {
+    if (type === "start") {
+      setStartTime(value);
+      if (endTime && value >= endTime) {
+        setEndTime("");
+      }
+    } else {
+      setEndTime(value);
+    }
+    setError("");
+  };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -45,7 +98,7 @@ export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onC
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg"
                       placeholder="What needs to be done?"
                     />
                   </div>
@@ -56,42 +109,57 @@ export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onC
                       type="date"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none dark:[&::-webkit-calendar-picker-indicator]:invert"
+                      className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-text-muted mb-1">Start Time</label>
-                      <input
-                        type="time"
-                        onChange={(e) => {
-                          // Handle time input
-                        }}
-                        className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none dark:[&::-webkit-calendar-picker-indicator]:invert"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-text-muted mb-1">End Time</label>
-                      <input
-                        type="time"
-                        onChange={(e) => {
-                          // Handle time input
-                        }}
-                        className="w-full px-4 py-2 bg-background border text-text border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none dark:[&::-webkit-calendar-picker-indicator]:invert"
-                      />
-                    </div>
-                  </div>
 
-                  {/* <div className="flex items-center gap-2">
+                  {!allDay && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm text-text-muted mb-1">Start Time</label>
+                          <input
+                            type="time"
+                            value={startTime}
+                            onChange={(e) => handleTimeChange("start", e.target.value)}
+                            className={`w-full px-4 py-2 bg-background border text-text rounded-lg ${
+                              isTimeInvalid ? "border-red-500" : "border-border/50"
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-text-muted mb-1">End Time</label>
+                          <input
+                            type="time"
+                            value={endTime}
+                            onChange={(e) => handleTimeChange("end", e.target.value)}
+                            min={startTime || undefined}
+                            className={`w-full px-4 py-2 bg-background border text-text rounded-lg ${
+                              isTimeInvalid ? "border-red-500" : "border-border/50"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                      {isTimeInvalid && <p className="text-red-500 text-sm">{error}</p>}
+                    </>
+                  )}
+
+                  <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       id="allDay"
+                      checked={allDay}
+                      onChange={(e) => {
+                        setAllDay(e.target.checked);
+                        setError("");
+                      }}
                       className="rounded border-border/50 text-primary focus:ring-primary/50"
                     />
                     <label htmlFor="allDay" className="text-sm text-text-muted">
                       All-day event
                     </label>
-                  </div> */}
+                  </div>
+
                   <div>
                     <label className="block text-sm text-text-muted mb-1">Priority</label>
                     <div className="flex gap-3">
@@ -115,13 +183,7 @@ export default function AddTaskModal({ isOpen, onClose }: { isOpen: boolean; onC
                     <Button variant="secondary" size="md" onClick={onClose}>
                       Cancel
                     </Button>
-                    <Button
-                      size="md"
-                      onClick={() => {
-                        // Handle save logic
-                        onClose();
-                      }}
-                    >
+                    <Button size="md" onClick={handleSubmit} disabled={!!isTimeInvalid}>
                       Add Task
                     </Button>
                   </div>

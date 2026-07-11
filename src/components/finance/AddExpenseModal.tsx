@@ -1,19 +1,65 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { createExpense } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
+
+type Category = {
+  id: number;
+  name: string;
+};
 
 export default function AddExpenseModal({
   isOpen,
   onClose,
   categories,
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  categories: string[];
+  categories: Category[];
+  onSuccess?: () => void;
 }) {
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState(categories[0]?.toLowerCase() || "");
+  const [categoryId, setCategoryId] = useState<number>(categories[0]?.id || 0);
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { showToast } = useToast();
+
+  const handleSubmit = async () => {
+    if (!amount || !categoryId) {
+      setError("Amount and category are required");
+      return;
+    }
+
+    setError("");
+    setIsLoading(true);
+
+    try {
+      await createExpense({
+        amount,
+        description,
+        category: categoryId,
+      });
+      showToast({ message: "Expense added successfully!", type: "success" });
+      // Reset form
+      setAmount("");
+      setDescription("");
+      setCategoryId(categories[0]?.id || 0);
+      onSuccess?.();
+      onClose();
+    } catch (err: any) {
+      const errorMsg = err?.errors || err?.message || "Failed to add expense";
+      showToast({ message: errorMsg, type: "error" });
+      setError(typeof errorMsg === "string" ? errorMsg : "Failed to add expense");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update categoryId when categories change (e.g., after adding new category)
+  const selectedCategory = categories.find((c) => c.id === categoryId);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -65,7 +111,10 @@ export default function AddExpenseModal({
                       <input
                         type="number"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          setError("");
+                        }}
                         className="w-full pl-8 pr-4 py-2 bg-background border border-border/50 text-text rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                         placeholder="0.00"
                       />
@@ -75,28 +124,26 @@ export default function AddExpenseModal({
                   <div>
                     <label className="block text-sm text-text-muted mb-1">Category</label>
                     <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(Number(e.target.value))}
                       className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                     >
+                      {categories.length === 0 && <option value="">No categories available</option>}
                       {categories.map((cat) => (
-                        <option key={cat} value={cat.toLowerCase()}>
-                          {cat}
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
                         </option>
                       ))}
                     </select>
                   </div>
 
+                  {error && <p className="text-sm text-accent">{error}</p>}
+
                   <div className="pt-4 flex text-text justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose}>
+                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
                       Cancel
                     </Button>
-                    <Button
-                      onClick={() => {
-                        // Handle save logic
-                        onClose();
-                      }}
-                    >
+                    <Button onClick={handleSubmit} isLoading={isLoading} disabled={!amount || !categoryId}>
                       Save Expense
                     </Button>
                   </div>
