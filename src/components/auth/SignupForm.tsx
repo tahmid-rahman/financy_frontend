@@ -17,7 +17,7 @@ const signupSchema = z
     phone: z
       .string()
       .min(10, { message: "Phone number must be at least 10 digits" })
-      .regex(/^\d{10}$/, { message: "Phone number must be exactly 10 digit" }),
+      .regex(/^\d{10,11}$/, { message: "Phone number must be 10-11 digits (without country code)" }),
     password: z
       .string()
       .min(6, { message: "Password must be at least 6 characters" })

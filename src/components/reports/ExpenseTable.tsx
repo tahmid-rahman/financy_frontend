@@ -1,32 +1,27 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { getExpenses, getCategories } from "../../services/api";
+import { getExpenses } from "../../services/api";
 
 type Expense = {
   id: number;
   description: string;
   amount: number;
   category: number;
+  category_name?: string;
   date: string;
 };
 
 const ExpenseTable = ({ month }: { month: string }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [categories, setCategories] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true);
-        const [expensesRes, categoriesRes] = await Promise.all([getExpenses(), getCategories()]);
-
-        const expenseData: Expense[] = expensesRes.data || [];
-        const categoriesData: Record<number, string> = {};
-        (categoriesRes.data || []).forEach((c: { id: number; name: string }) => {
-          categoriesData[c.id] = c.name;
-        });
+        const res = await getExpenses();
+        const expenseData: Expense[] = res.data || [];
 
         // Filter by month
         const filtered = expenseData.filter((expense) => {
@@ -36,7 +31,6 @@ const ExpenseTable = ({ month }: { month: string }) => {
         });
 
         setExpenses(filtered);
-        setCategories(categoriesData);
       } catch (err) {
         console.error("Failed to fetch expense data", err);
       } finally {
@@ -49,7 +43,7 @@ const ExpenseTable = ({ month }: { month: string }) => {
 
   // Group by category
   const groupedData = expenses.reduce((acc, row) => {
-    const categoryName = categories[row.category] || "Unknown";
+    const categoryName = row.category_name || "Unknown";
     if (!acc[categoryName]) {
       acc[categoryName] = [];
     }

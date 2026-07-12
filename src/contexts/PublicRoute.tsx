@@ -2,11 +2,11 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { Spinner } from "../components/ui/Spinner";
 
-interface ProtectedRouteProps {
+interface PublicRouteProps {
   children: JSX.Element;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element => {
+export const PublicRoute = ({ children }: PublicRouteProps): JSX.Element => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -17,5 +17,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element =
     );
   }
 
-  return user ? children : <Navigate to="/login" replace />;
+  // If user is logged in, redirect to dashboard
+  return user ? <Navigate to="/dashboard" replace /> : children;
 };

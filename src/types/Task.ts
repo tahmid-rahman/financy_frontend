@@ -1,5 +1,5 @@
 export type Task = {
-  id: string; // Changed to string to match EditTaskModal
+  id: number;
   title: string;
   dueDate: string;
   startTime?: string;

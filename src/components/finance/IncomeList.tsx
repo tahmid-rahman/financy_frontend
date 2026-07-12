@@ -25,7 +25,8 @@ export default function IncomeList({ filter, incomeSources }: IncomeListProps) {
       try {
         setIsLoading(true);
         const res = await getIncomes();
-        const incomeData = res.data || [];
+        // Backend returns {data: [...]} wrapper
+        const incomeData = Array.isArray(res) ? res : (res.data || []);
         setIncomes(incomeData);
       } catch (err) {
         console.error("Failed to load incomes", err);
@@ -35,7 +36,7 @@ export default function IncomeList({ filter, incomeSources }: IncomeListProps) {
     }
 
     fetchIncomes();
-  }, []);
+  }, [filter, incomeSources]);
 
   // Build source map for display
   const sourceMap: Record<number, string> = {};
@@ -51,6 +52,13 @@ export default function IncomeList({ filter, incomeSources }: IncomeListProps) {
           return srcName.toLowerCase() === filter.toLowerCase();
         });
 
+  // Sort by date descending (newest first)
+  const sortedIncomes = [...filteredIncomes].sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    return dateB - dateA;
+  });
+
   if (isLoading) {
     return (
       <div className="bg-surface border border-border/50 rounded-lg overflow-hidden p-8 text-center text-text-muted">
@@ -63,12 +71,12 @@ export default function IncomeList({ filter, incomeSources }: IncomeListProps) {
     <div className="bg-surface border border-border/50 rounded-lg overflow-hidden">
       <div className="p-4 border-b border-border/50 flex justify-between items-center">
         <h2 className="font-medium">Recent Income</h2>
-        <span className="text-sm text-text-muted">{filteredIncomes.length} records</span>
+        <span className="text-sm text-text-muted">{sortedIncomes.length} records</span>
       </div>
 
-      {filteredIncomes.length > 0 ? (
+      {sortedIncomes.length > 0 ? (
         <ul className="divide-y divide-border/50">
-          {filteredIncomes.map((income) => (
+          {sortedIncomes.map((income) => (
             <li key={income.id} className="p-4 hover:bg-background/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -79,10 +87,14 @@ export default function IncomeList({ filter, incomeSources }: IncomeListProps) {
                     <p className="font-medium text-sm">{income.description || "No description"}</p>
                     <p className="text-xs text-text-muted capitalize">
                       {sourceMap[income.source] || "uncategorized"} •{" "}
-                      {new Date(income.date).toLocaleString("en-US", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      {(() => {
+                        try {
+                          const date = new Date(income.date);
+                          return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+                        } catch {
+                          return 'Invalid date';
+                        }
+                      })()}
                     </p>
                   </div>
                 </div>

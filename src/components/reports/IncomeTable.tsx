@@ -1,32 +1,27 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { getIncomes, getIncomeSources } from "../../services/api";
+import { getIncomes } from "../../services/api";
 
 type Income = {
   id: number;
   description: string;
   amount: number;
   source: number;
+  source_name?: string;
   date: string;
 };
 
 const IncomeTable = ({ month }: { month: string }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [incomes, setIncomes] = useState<Income[]>([]);
-  const [sources, setSources] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true);
-        const [incomesRes, sourcesRes] = await Promise.all([getIncomes(), getIncomeSources()]);
-
-        const incomeData: Income[] = incomesRes.data || [];
-        const sourcesData: Record<number, string> = {};
-        (sourcesRes.data || []).forEach((s: { id: number; name: string }) => {
-          sourcesData[s.id] = s.name;
-        });
+        const res = await getIncomes();
+        const incomeData: Income[] = res.data || [];
 
         // Filter by month
         const filtered = incomeData.filter((income) => {
@@ -36,7 +31,6 @@ const IncomeTable = ({ month }: { month: string }) => {
         });
 
         setIncomes(filtered);
-        setSources(sourcesData);
       } catch (err) {
         console.error("Failed to fetch income data", err);
       } finally {
@@ -49,7 +43,7 @@ const IncomeTable = ({ month }: { month: string }) => {
 
   // Group by source
   const groupedData = incomes.reduce((acc, row) => {
-    const sourceName = sources[row.source] || "Unknown";
+    const sourceName = row.source_name || "Unknown";
     if (!acc[sourceName]) {
       acc[sourceName] = [];
     }

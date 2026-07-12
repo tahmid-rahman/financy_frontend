@@ -138,7 +138,7 @@ export default function TaskList() {
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <ClockIcon className="h-3 w-3 text-text-muted" />
-                    <span className="text-xs text-text-muted">Due {new Date(task.due_date).toLocaleDateString()}</span>
+                    <span className="text-xs text-text-muted">Due {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}</span>
                     {task.priority === "high" && (
                       <span className="flex items-center gap-1 text-xs text-accent">
                         <ExclamationTriangleIcon className="h-3 w-3" />

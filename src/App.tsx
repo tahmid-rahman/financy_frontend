@@ -3,6 +3,8 @@ import "./styles/globals.css";
 import "./styles/calendar.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
+import { PublicRoute } from "./contexts/PublicRoute";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Signup from "./pages/Signup";
@@ -14,17 +16,40 @@ import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/404";
-// import { AuthProvider } from "./contexts/AuthContext";s
 
 function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        {/* Public routes - only for logged out users */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Landing />
+            </PublicRoute>
+          }
+        />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
 
+        {/* Protected routes - only for logged in users */}
         <Route
           path="/dashboard"
           element={
@@ -77,6 +102,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
