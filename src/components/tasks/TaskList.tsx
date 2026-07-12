@@ -6,7 +6,7 @@ import {
   EllipsisHorizontalIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import EditTaskModal from "./EditTaskModal";
 import { getTasks, updateTask, deleteTask } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
@@ -28,11 +28,7 @@ export default function TaskList() {
   const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getTasks();
@@ -46,7 +42,11 @@ export default function TaskList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const toggleTaskCompletion = async (taskId: number) => {
     try {

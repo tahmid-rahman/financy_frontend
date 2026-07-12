@@ -1,6 +1,5 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { Spinner } from "../components/ui/Spinner";
 
 interface ProtectedRouteProps {
   children: JSX.Element;
@@ -12,7 +11,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element =
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Spinner />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { ArrowDownIcon, ArrowUpIcon, EllipsisHorizontalIcon, XMarkIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import { ArrowDownIcon, ArrowUpIcon, EllipsisHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useEffect, useState } from "react";
 import { getExpenses, getIncomes, getCategories, getIncomeSources } from "../../services/api";
@@ -18,8 +18,6 @@ export default function RecentTransactions() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
-  const [categories, setCategories] = useState<Record<number, string>>({});
-  const [sources, setSources] = useState<Record<number, string>>({});
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -44,9 +42,6 @@ export default function RecentTransactions() {
         (sourcesRes.data || []).forEach((s: { id: number; name: string }) => {
           srcs[s.id] = s.name;
         });
-
-        setCategories(cats);
-        setSources(srcs);
 
         // Combine and sort by date
         const combined: Transaction[] = [

@@ -67,9 +67,6 @@ export default function AddExpenseModal({
     }
   };
 
-  // Update categoryId when categories change (e.g., after adding new category)
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>

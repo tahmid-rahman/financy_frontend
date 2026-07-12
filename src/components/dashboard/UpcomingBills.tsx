@@ -47,12 +47,6 @@ export default function UpcomingBills() {
     fetchTasks();
   }, []);
 
-  const typeColors = {
-    meeting: "bg-blue-500/10 text-blue-500",
-    appointment: "bg-green-500/10 text-green-500",
-    deadline: "bg-red-500/10 text-red-500",
-  };
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":

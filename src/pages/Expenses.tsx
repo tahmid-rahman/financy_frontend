@@ -63,7 +63,6 @@ export default function Expenses() {
         });
 
         const totalSpent = monthExpenses.reduce((sum: number, e: { amount: number }) => sum + Number(e.amount), 0);
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const dayOfMonth = now.getDate();
         const dailyAverage = dayOfMonth > 0 ? totalSpent / dayOfMonth : 0;
         const transactionCount = monthExpenses.length;
