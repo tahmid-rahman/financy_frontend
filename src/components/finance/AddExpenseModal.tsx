@@ -1,5 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { createExpense } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
@@ -21,14 +21,21 @@ export default function AddExpenseModal({
   onSuccess?: () => void;
 }) {
   const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState<number>(categories[0]?.id || 0);
+  const [categoryId, setCategoryId] = useState<number>(0);
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { showToast } = useToast();
 
+  // Update categoryId when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && categoryId === 0) {
+      setCategoryId(categories[0].id);
+    }
+  }, [categories, categoryId]);
+
   const handleSubmit = async () => {
-    if (!amount || !categoryId) {
+    if (!amount || !categoryId || categoryId === 0) {
       setError("Amount and category are required");
       return;
     }
@@ -37,11 +44,13 @@ export default function AddExpenseModal({
     setIsLoading(true);
 
     try {
-      await createExpense({
+      console.log("Creating expense with:", { amount, description, category: categoryId });
+      const result = await createExpense({
         amount,
         description,
         category: categoryId,
       });
+      console.log("Expense created:", result);
       showToast({ message: "Expense added successfully!", type: "success" });
       // Reset form
       setAmount("");
@@ -57,9 +66,6 @@ export default function AddExpenseModal({
       setIsLoading(false);
     }
   };
-
-  // Update categoryId when categories change (e.g., after adding new category)
-  const selectedCategory = categories.find((c) => c.id === categoryId);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>

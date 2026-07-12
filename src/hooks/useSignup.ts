@@ -19,7 +19,7 @@ export const useSignup = () => {
     setError(null);
 
     try {
-      await api.post("/auth/register/", {
+      await api.post("/accounts/register/", {
         name: data.name,
         email: data.email,
         password: data.password,

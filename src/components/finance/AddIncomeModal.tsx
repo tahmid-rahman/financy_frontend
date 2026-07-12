@@ -1,5 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { createIncome } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
@@ -21,14 +21,21 @@ export default function AddIncomeModal({
   onSuccess?: () => void;
 }) {
   const [amount, setAmount] = useState("");
-  const [sourceId, setSourceId] = useState<number>(incomeSources[0]?.id || 0);
+  const [sourceId, setSourceId] = useState<number>(0);
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { showToast } = useToast();
 
+  // Update sourceId when incomeSources are loaded
+  useEffect(() => {
+    if (incomeSources.length > 0 && sourceId === 0) {
+      setSourceId(incomeSources[0].id);
+    }
+  }, [incomeSources, sourceId]);
+
   const handleSubmit = async () => {
-    if (!amount || !sourceId) {
+    if (!amount || !sourceId || sourceId === 0) {
       setError("Amount and source are required");
       return;
     }
@@ -37,11 +44,13 @@ export default function AddIncomeModal({
     setIsLoading(true);
 
     try {
-      await createIncome({
+      console.log("Creating income with:", { amount, description, source: sourceId });
+      const result = await createIncome({
         amount,
         description,
         source: sourceId,
       });
+      console.log("Income created:", result);
       showToast({ message: "Income added successfully!", type: "success" });
       // Reset form
       setAmount("");

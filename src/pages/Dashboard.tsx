@@ -1,4 +1,3 @@
-import { useAuth } from "../contexts/AuthContext";
 import {
   FinancialSummary,
   SpendingChart,
@@ -11,8 +10,6 @@ import { Helmet } from "react-helmet";
 import { Footer } from "../components/nav";
 
 export default function Dashboard() {
-  const { user } = useAuth();
-
   return (
     <div className="min-h-screen bg-background text-text">
       <Helmet>

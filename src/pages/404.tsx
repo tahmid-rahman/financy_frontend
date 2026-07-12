@@ -109,7 +109,9 @@ const NotFound = () => {
 
               <p className="text-xl text-text-muted mb-6 max-w-md mx-auto lg:mx-0">
                 We couldn't find{" "}
-                <code className="bg-surface-dark px-2 py-1 rounded text-sm break-all">{location.pathname}</code>
+                <code className="bg-surface-dark px-2 py-1 rounded text-sm break-all">
+                  {location.pathname.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                </code>
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">

@@ -1,6 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
+import { updateProfile } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function AvatarEditorModal({
   isOpen,
@@ -12,6 +14,8 @@ export default function AvatarEditorModal({
   onSave: (avatar: string) => void;
 }) {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -21,6 +25,25 @@ export default function AvatarEditorModal({
         setSelectedFile(event.target?.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedFile) return;
+
+    setIsLoading(true);
+    try {
+      await updateProfile({ avatar: selectedFile });
+      onSave(selectedFile);
+      showToast({ message: "Avatar updated successfully!", type: "success" });
+      onClose();
+    } catch (err: any) {
+      showToast({
+        message: err?.message || "Failed to update avatar",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,16 +100,12 @@ export default function AvatarEditorModal({
                   </div>
 
                   <div className="pt-4 flex justify-end gap-3">
-                    <Button variant="secondary" className="text-text" onClick={onClose}>
+                    <Button variant="secondary" className="text-text" onClick={onClose} disabled={isLoading}>
                       Cancel
                     </Button>
                     <Button
-                      onClick={() => {
-                        if (selectedFile) {
-                          onSave(selectedFile);
-                        }
-                        onClose();
-                      }}
+                      onClick={handleSave}
+                      isLoading={isLoading}
                       disabled={!selectedFile}
                     >
                       Save Changes

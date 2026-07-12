@@ -13,7 +13,6 @@ export function Toast({ message, type, onClose, duration = 3000 }: ToastProps) {
   const [show, setShow] = useState(true);
   const [progress, setProgress] = useState(100);
   const progressRef = useRef<NodeJS.Timeout>();
-  const startTimeRef = useRef<number>(Date.now());
   const remainingTimeRef = useRef<number>(duration);
 
   useEffect(() => {

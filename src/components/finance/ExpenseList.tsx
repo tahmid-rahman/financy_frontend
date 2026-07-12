@@ -25,7 +25,8 @@ export default function ExpenseList({ filter, categories }: ExpenseListProps) {
       try {
         setIsLoading(true);
         const res = await getExpenses();
-        const expenseData = res.data || [];
+        // Backend returns {data: [...]} wrapper
+        const expenseData = Array.isArray(res) ? res : (res.data || []);
         setExpenses(expenseData);
       } catch (err) {
         console.error("Failed to load expenses", err);
@@ -35,7 +36,7 @@ export default function ExpenseList({ filter, categories }: ExpenseListProps) {
     }
 
     fetchExpenses();
-  }, []);
+  }, [filter, categories]);
 
   // Build category map for display
   const categoryMap: Record<number, string> = {};
@@ -51,6 +52,13 @@ export default function ExpenseList({ filter, categories }: ExpenseListProps) {
           return catName.toLowerCase() === filter.toLowerCase();
         });
 
+  // Sort by date descending (newest first)
+  const sortedExpenses = [...filteredExpenses].sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    return dateB - dateA;
+  });
+
   if (isLoading) {
     return (
       <div className="bg-surface border border-border/50 rounded-lg overflow-hidden p-8 text-center text-text-muted">
@@ -63,12 +71,12 @@ export default function ExpenseList({ filter, categories }: ExpenseListProps) {
     <div className="bg-surface border border-border/50 rounded-lg overflow-hidden">
       <div className="p-4 border-b border-border/50 flex justify-between items-center">
         <h2 className="font-medium">Recent Expenses</h2>
-        <span className="text-sm text-text-muted">{filteredExpenses.length} records</span>
+        <span className="text-sm text-text-muted">{sortedExpenses.length} records</span>
       </div>
 
-      {filteredExpenses.length > 0 ? (
+      {sortedExpenses.length > 0 ? (
         <ul className="divide-y divide-border/50">
-          {filteredExpenses.map((expense) => (
+          {sortedExpenses.map((expense) => (
             <li key={expense.id} className="p-4 hover:bg-background/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -79,10 +87,14 @@ export default function ExpenseList({ filter, categories }: ExpenseListProps) {
                     <p className="font-medium text-sm">{expense.description || "No description"}</p>
                     <p className="text-xs text-text-muted capitalize">
                       {categoryMap[expense.category] || "uncategorized"} •{" "}
-                      {new Date(expense.date).toLocaleString("en-US", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      {(() => {
+                        try {
+                          const date = new Date(expense.date);
+                          return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+                        } catch {
+                          return 'Invalid date';
+                        }
+                      })()}
                     </p>
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+// @ts-ignore: side-effect import for global CSS
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";

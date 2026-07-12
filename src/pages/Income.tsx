@@ -7,7 +7,16 @@ import FilterDropdown from "../components/ui/FilterDropdown";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
 import { Footer } from "../components/nav";
-import { getIncomeSources } from "../services/api";
+import { getIncomeSources, getIncomes } from "../services/api";
+
+type IncomeSummary = {
+  totalIncome: number;
+  projectedMonthly: number;
+  primarySource: string;
+  incomeCount: number;
+  avgPerTransaction: number;
+  vsLastMonth: number;
+};
 
 export default function Income() {
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -15,18 +24,89 @@ export default function Income() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [incomeSources, setIncomeSources] = useState<{ id: number; name: string }[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [summary, setSummary] = useState<IncomeSummary>({
+    totalIncome: 0,
+    projectedMonthly: 0,
+    primarySource: "-",
+    incomeCount: 0,
+    avgPerTransaction: 0,
+    vsLastMonth: 0,
+  });
+  const [isLoadingSummary, setIsLoadingSummary] = useState(true);
 
   useEffect(() => {
-    async function fetchSources() {
+    async function fetchData() {
       try {
-        const data = await getIncomeSources();
-        setIncomeSources(data.data || []);
+        const [sourcesData, incomesData] = await Promise.all([
+          getIncomeSources(),
+          getIncomes(),
+        ]);
+
+        // Sources
+        const sources = Array.isArray(sourcesData) ? sourcesData : (sourcesData.data || []);
+        setIncomeSources(sources);
+
+        // Incomes
+        const incomes = Array.isArray(incomesData) ? incomesData : (incomesData.data || []);
+
+        // Calculate current month stats
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthIncomes = incomes.filter((i: { date: string }) => {
+          const incDate = new Date(i.date);
+          return incDate >= monthStart;
+        });
+
+        const totalIncome = monthIncomes.reduce((sum: number, i: { amount: number }) => sum + Number(i.amount), 0);
+        const incomeCount = monthIncomes.length;
+        const avgPerTransaction = incomeCount > 0 ? totalIncome / incomeCount : 0;
+
+        // Calculate vs last month
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        const lastMonthIncomes = incomes.filter((i: { date: string }) => {
+          const incDate = new Date(i.date);
+          return incDate >= lastMonthStart && incDate <= lastMonthEnd;
+        });
+        const lastMonthTotal = lastMonthIncomes.reduce((sum: number, i: { amount: number }) => sum + Number(i.amount), 0);
+        const vsLastMonth = lastMonthTotal > 0 ? ((totalIncome - lastMonthTotal) / lastMonthTotal) * 100 : 0;
+
+        // Days elapsed vs days in month for projection
+        const dayOfMonth = now.getDate();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const projectedMonthly = dayOfMonth > 0 ? (totalIncome / dayOfMonth) * daysInMonth : 0;
+
+        // Primary source
+        const sourceTotals: Record<number, number> = {};
+        monthIncomes.forEach((i: { source: number; amount: number }) => {
+          sourceTotals[i.source] = (sourceTotals[i.source] || 0) + Number(i.amount);
+        });
+
+        let primarySource = "-";
+        let maxAmount = 0;
+        Object.entries(sourceTotals).forEach(([srcId, amount]) => {
+          if (amount > maxAmount) {
+            maxAmount = amount;
+            primarySource = sources.find((s: { id: number }) => s.id === Number(srcId))?.name || "Unknown";
+          }
+        });
+
+        setSummary({
+          totalIncome,
+          projectedMonthly,
+          primarySource,
+          incomeCount,
+          avgPerTransaction,
+          vsLastMonth,
+        });
       } catch (err) {
-        console.error("Failed to load income sources", err);
+        console.error("Failed to load income data", err);
+      } finally {
+        setIsLoadingSummary(false);
       }
     }
-    fetchSources();
-  }, []);
+    fetchData();
+  }, [refreshKey]);
 
   const sourceNames = incomeSources.map((s) => s.name);
 
@@ -106,25 +186,52 @@ export default function Income() {
           {/* Summary Card (1/3 width) */}
           <div className="bg-surface border border-border/50 rounded-lg p-5 h-fit sticky top-6">
             <h2 className="font-medium mb-4">Monthly Summary</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-text-muted">Total Income</span>
-                <span className="font-medium">৳0.00</span>
+            {isLoadingSummary ? (
+              <div className="space-y-4 animate-pulse">
+                <div className="h-4 bg-border/50 rounded w-full"></div>
+                <div className="h-4 bg-border/50 rounded w-full"></div>
+                <div className="h-4 bg-border/50 rounded w-full"></div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Primary Source</span>
-                <span className="font-medium">-</span>
-              </div>
-              <div className="pt-4 border-t border-border/50">
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-text-muted">Projected Monthly</span>
-                  <span className="text-sm font-medium">৳0.00</span>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Total Income</span>
+                  <div className="text-right">
+                    <span className="font-medium text-green-500">৳{summary.totalIncome.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    {summary.vsLastMonth !== 0 && (
+                      <span className={`text-xs ml-2 ${summary.vsLastMonth > 0 ? "text-green-500" : "text-red-500"}`}>
+                        ({summary.vsLastMonth > 0 ? "+" : ""}{summary.vsLastMonth.toFixed(0)}% vs last month)
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="w-full bg-background rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: "0%" }} />
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Transactions</span>
+                  <span className="font-medium">{summary.incomeCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Primary Source</span>
+                  <span className="font-medium">{summary.primarySource}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Avg per Transaction</span>
+                  <span className="font-medium text-green-500">৳{summary.avgPerTransaction.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="pt-4 border-t border-border/50">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-text-muted">Projected Monthly</span>
+                    <span className="text-sm font-medium text-green-500">৳{summary.projectedMonthly.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="w-full bg-background rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                  <p className="text-xs text-text-muted mt-1">Based on {new Date().getDate()} days of data</p>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>

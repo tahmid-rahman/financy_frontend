@@ -6,7 +6,7 @@ import {
   EllipsisHorizontalIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import EditTaskModal from "./EditTaskModal";
 import { getTasks, updateTask, deleteTask } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
@@ -28,11 +28,7 @@ export default function TaskList() {
   const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getTasks();
@@ -46,7 +42,11 @@ export default function TaskList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const toggleTaskCompletion = async (taskId: number) => {
     try {
@@ -138,7 +138,7 @@ export default function TaskList() {
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <ClockIcon className="h-3 w-3 text-text-muted" />
-                    <span className="text-xs text-text-muted">Due {new Date(task.due_date).toLocaleDateString()}</span>
+                    <span className="text-xs text-text-muted">Due {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}</span>
                     {task.priority === "high" && (
                       <span className="flex items-center gap-1 text-xs text-accent">
                         <ExclamationTriangleIcon className="h-3 w-3" />
