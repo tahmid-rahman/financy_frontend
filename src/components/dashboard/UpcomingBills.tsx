@@ -2,6 +2,13 @@ import { CalendarIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { getTasks } from "../../services/api";
 
+// Safe date parsing utility
+const safeParseDate = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+};
+
 type Task = {
   id: number;
   title: string;
@@ -17,11 +24,17 @@ export default function UpcomingBills() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchTasks() {
       try {
         setIsLoading(true);
         const res = await getTasks();
-        const allTasks: Task[] = res.data || [];
+        if (cancelled) return;
+
+        // Backend returns { message: "...", data: [...] }
+        const rawData = res;
+        const allTasks: Task[] = rawData?.data || rawData || [];
 
         // Filter to incomplete tasks due in the next 7 days
         const now = new Date();
@@ -30,21 +43,33 @@ export default function UpcomingBills() {
         const upcomingTasks = allTasks
           .filter((task) => {
             if (task.completed) return false;
-            const dueDate = new Date(task.due_date);
+            const dueDate = safeParseDate(task.due_date);
+            if (!dueDate) return false; // Skip invalid dates
             return dueDate >= now && dueDate <= nextWeek;
           })
-          .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+          .sort((a, b) => {
+            const dateA = safeParseDate(a.due_date);
+            const dateB = safeParseDate(b.due_date);
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateA.getTime() - dateB.getTime();
+          })
           .slice(0, 3);
 
-        setTasks(upcomingTasks);
+        if (!cancelled) setTasks(upcomingTasks);
       } catch (err) {
         console.error("Failed to fetch upcoming tasks", err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     fetchTasks();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const getPriorityColor = (priority: string) => {
@@ -92,10 +117,10 @@ export default function UpcomingBills() {
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-xs text-text-muted flex items-center gap-1">
                     <CalendarIcon className="h-3 w-3" />
-                    {new Date(task.due_date).toLocaleDateString("en-US", {
+                    {safeParseDate(task.due_date)?.toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
-                    })}
+                    }) || "Unknown"}
                   </p>
                   {task.start_time && (
                     <p className="text-xs text-text-muted flex items-center gap-1">

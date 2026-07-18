@@ -1,20 +1,48 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
-const API_BASE_URL = "http://localhost:8000/api/";
+// Use environment variable with fallback to localhost for development
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api/";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 30000, // 30 second timeout to prevent hanging requests
 });
+
+// Token storage with improved security
+// Note: For production, consider using httpOnly cookies instead of localStorage
+const TOKEN_KEY = "financy_token";
+const OAUTH_TOKEN_KEY = "financy_oauth_token";
+
+export const tokenStorage = {
+  get: (): string | null => {
+    return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(OAUTH_TOKEN_KEY);
+  },
+  set: (token: string, isOAuth = false): void => {
+    // Clear any existing tokens first
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(OAUTH_TOKEN_KEY);
+    // Store in the appropriate key
+    localStorage.setItem(isOAuth ? OAUTH_TOKEN_KEY : TOKEN_KEY, token);
+  },
+  clear: (): void => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(OAUTH_TOKEN_KEY);
+  },
+};
 
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = tokenStorage.get();
     if (token) {
       config.headers.Authorization = `Token ${token}`;
+    }
+    // Use multipart for avatar uploads
+    if (config.data instanceof FormData) {
+      config.headers["Content-Type"] = "multipart/form-data";
     }
     return config;
   },
@@ -24,11 +52,26 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response) {
-      return Promise.reject(error.response.data);
+  (error: AxiosError) => {
+    // Handle 401 errors - token expired or invalid
+    if (error.response?.status === 401) {
+      // Clear tokens on 401
+      tokenStorage.clear();
+      // Dispatch custom event for AuthContext to handle logout
+      window.dispatchEvent(new CustomEvent("auth:token-expired"));
     }
-    return Promise.reject(error);
+
+    // Handle network errors
+    if (!error.response) {
+      const networkError = {
+        message: "Network error. Please check your connection.",
+        code: "NETWORK_ERROR",
+      };
+      return Promise.reject(networkError);
+    }
+
+    // Return the error response data
+    return Promise.reject(error.response?.data || error.message);
   }
 );
 
@@ -212,7 +255,7 @@ export const createTask = async (task: {
 
 export const getTasks = async () => {
   const response = await api.get("/task/");
-  return response.data;
+  return response.data;  // Return data consistently
 };
 
 export const updateTask = async (
@@ -276,6 +319,16 @@ export const changePassword = async (oldPassword: string, newPassword: string) =
     old_password: oldPassword,
     new_password: newPassword,
   });
+  return response.data;
+};
+
+export const getUserHistory = async () => {
+  const response = await api.get("/accounts/user-history/");
+  return response.data;
+};
+
+export const getActivityLog = async () => {
+  const response = await api.get("/calculation/activity-log/");
   return response.data;
 };
 

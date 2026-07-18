@@ -83,17 +83,19 @@ export default function AddCategoryModal({
                         setNewCategory(e.target.value);
                         setError("");
                       }}
-                      className="w-full px-4 py-2 bg-background text-text border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      className="w-full px-4 py-2 bg-background text-text border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                       placeholder="e.g. Entertainment"
                     />
                     {error && <p className="mt-1 text-sm text-accent">{error}</p>}
                   </div>
 
                   <div className="pt-4 flex text-text justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose}>
+                    <Button variant="ghostAccent" onClick={onClose}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSubmit}>Add Category</Button>
+                    <Button variant="accent" onClick={handleSubmit}>
+                      Add Category
+                    </Button>
                   </div>
                 </div>
               </Dialog.Panel>

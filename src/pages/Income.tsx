@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import IncomeList from "../components/finance/IncomeList";
 import AddIncomeModal from "../components/finance/AddIncomeModal";
+import EditIncomeModal from "../components/finance/EditIncomeModal";
 import AddIncomeSourceModal from "../components/finance/AddIncomeSourceModal";
 import Button from "../components/ui/Button";
 import FilterDropdown from "../components/ui/FilterDropdown";
@@ -8,6 +9,14 @@ import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
 import { Footer } from "../components/nav";
 import { getIncomeSources, getIncomes } from "../services/api";
+
+type IncomeItem = {
+  id: number;
+  description: string;
+  amount: number;
+  source: number;
+  date: string;
+};
 
 type IncomeSummary = {
   totalIncome: number;
@@ -20,10 +29,12 @@ type IncomeSummary = {
 
 export default function Income() {
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
+  const [isEditIncomeModalOpen, setIsEditIncomeModalOpen] = useState(false);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
   const [incomeSources, setIncomeSources] = useState<{ id: number; name: string }[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedIncome, setSelectedIncome] = useState<IncomeItem | null>(null);
   const [summary, setSummary] = useState<IncomeSummary>({
     totalIncome: 0,
     projectedMonthly: 0,
@@ -114,6 +125,11 @@ export default function Income() {
     setRefreshKey((k) => k + 1);
   };
 
+  const handleEditIncome = (income: IncomeItem) => {
+    setSelectedIncome(income);
+    setIsEditIncomeModalOpen(true);
+  };
+
   const handleAddSource = (newSource: string) => {
     if (!sourceNames.includes(newSource)) {
       setIncomeSources([...incomeSources, { id: Date.now(), name: newSource }]);
@@ -150,15 +166,15 @@ export default function Income() {
               />
               <div className="flex gap-2">
                 <Button
-                  variant="ghostAccent"
+                  variant="ghost"
                   size="sm"
                   onClick={() => setIsSourceModalOpen(true)}
-                  className="flex items-center border border-accent"
+                  className="flex items-center border border-border"
                 >
                   Edit Source
                 </Button>
                 <Button
-                  variant="accent"
+                  variant="primary"
                   size="sm"
                   onClick={() => setIsIncomeModalOpen(true)}
                   className="flex items-center gap-2"
@@ -180,6 +196,8 @@ export default function Income() {
               key={refreshKey}
               filter={activeFilter}
               incomeSources={incomeSources}
+              onEdit={handleEditIncome}
+              onSuccess={handleIncomeSuccess}
             />
           </div>
 
@@ -240,6 +258,17 @@ export default function Income() {
       <AddIncomeModal
         isOpen={isIncomeModalOpen}
         onClose={() => setIsIncomeModalOpen(false)}
+        incomeSources={incomeSources}
+        onSuccess={handleIncomeSuccess}
+      />
+
+      <EditIncomeModal
+        isOpen={isEditIncomeModalOpen}
+        onClose={() => {
+          setIsEditIncomeModalOpen(false);
+          setSelectedIncome(null);
+        }}
+        income={selectedIncome}
         incomeSources={incomeSources}
         onSuccess={handleIncomeSuccess}
       />

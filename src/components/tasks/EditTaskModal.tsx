@@ -80,8 +80,8 @@ export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditT
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-surface border border-border/50 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg text-text font-medium mb-4">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-surface border border-accent/30 p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg text-accent font-medium mb-4">
                   Edit Task
                 </Dialog.Title>
 
@@ -92,7 +92,7 @@ export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditT
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      className="w-full px-4 py-2 bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                     />
                   </div>
 
@@ -102,7 +102,7 @@ export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditT
                       type="date"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      className="w-full px-4 py-2 bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                     />
                   </div>
 
@@ -115,7 +115,7 @@ export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditT
                           onClick={() => setPriority(level)}
                           className={`px-3 py-1.5 text-sm rounded-md border ${
                             priority === level
-                              ? "border-primary bg-primary/10 text-primary"
+                              ? "border-accent bg-accent/10 text-accent"
                               : "border-border text-text-muted hover:bg-background"
                           }`}
                         >
@@ -129,15 +129,14 @@ export default function EditTaskModal({ task, onSave, onDelete, onClose }: EditT
                     <Button
                       variant="delete"
                       onClick={() => onDelete(task.id)}
-                      className="text-accent hover:bg-accent/10"
                     >
                       Delete Task
                     </Button>
                     <div className="flex gap-3">
-                      <Button variant="secondary" onClick={onClose}>
+                      <Button variant="ghostAccent" onClick={onClose}>
                         Cancel
                       </Button>
-                      <Button onClick={handleSubmit} disabled={isSubmitting || !title.trim()}>
+                      <Button variant="accent" onClick={handleSubmit} disabled={isSubmitting || !title.trim()}>
                         {isSubmitting ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>

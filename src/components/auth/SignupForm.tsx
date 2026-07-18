@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiPhone } from "react-icons/fi";
@@ -6,9 +7,11 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
+
+// Use environment variable with fallback for OAuth endpoints
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
 
 const signupSchema = z
   .object({
@@ -70,6 +73,16 @@ export const SignupForm = () => {
   };
 
   const password = watch("password");
+
+  const handleGoogleLogin = () => {
+    const base = API_BASE_URL.replace(/\/$/, "");
+    window.location.href = `${base}/accounts/auth/google/`;
+  };
+
+  const handleGithubLogin = () => {
+    const base = API_BASE_URL.replace(/\/$/, "");
+    window.location.href = `${base}/accounts/auth/github/`;
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-8">
@@ -243,6 +256,7 @@ export const SignupForm = () => {
       >
         <button
           type="button"
+          onClick={handleGoogleLogin}
           className="flex items-center w-full justify-center gap-2 px-4 py-3 rounded-lg border border-border hover:bg-surface transition-colors text-text"
         >
           <FcGoogle className="text-lg" />
@@ -251,6 +265,7 @@ export const SignupForm = () => {
 
         <button
           type="button"
+          onClick={handleGithubLogin}
           className="flex items-center w-full justify-center gap-2 px-4 py-3 rounded-lg border border-border hover:bg-surface transition-colors text-text"
         >
           <FaGithub className="text-lg" />

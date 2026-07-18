@@ -2,6 +2,13 @@ import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { getIncomes } from "../../services/api";
 
+// Safe date parsing utility
+const safeParseDate = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+};
+
 type Income = {
   id: number;
   description: string;
@@ -21,11 +28,13 @@ const IncomeTable = ({ month }: { month: string }) => {
       try {
         setIsLoading(true);
         const res = await getIncomes();
-        const incomeData: Income[] = res.data || [];
+        // API now returns data directly
+        const incomeData: Income[] = res?.data || res || [];
 
-        // Filter by month
+        // Filter by month with safe date parsing
         const filtered = incomeData.filter((income) => {
-          const incomeDate = new Date(income.date);
+          const incomeDate = safeParseDate(income.date);
+          if (!incomeDate) return false;
           const [year, monthNum] = month.split("-").map(Number);
           return incomeDate.getFullYear() === year && incomeDate.getMonth() + 1 === monthNum;
         });
@@ -146,14 +155,14 @@ const IncomeTable = ({ month }: { month: string }) => {
                         style={{ width: column.width }}
                       >
                         {column.key === "date" ? (
-                          <span className="text-text-muted">{new Date(row.date).toLocaleDateString()}</span>
+                          <span className="text-text-muted">{safeParseDate(row.date)?.toLocaleDateString() || "-"}</span>
                         ) : column.key === "amount" ? (
                           <span className="text-green-500 dark:text-green-400">
                             ৳{parseFloat(String(row.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                           </span>
                         ) : column.key === "day" ? (
                           <span className="text-text-muted">
-                            {new Date(row.date).toLocaleDateString("en-US", { weekday: "long" })}
+                            {safeParseDate(row.date)?.toLocaleDateString("en-US", { weekday: "long" }) || "-"}
                           </span>
                         ) : column.key === "description" ? (
                           <span className="text-text">{row.description || "-"}</span>
@@ -205,11 +214,13 @@ const IncomeByDateTable = ({ month }: { month: string }) => {
       try {
         setIsLoading(true);
         const res = await getIncomes();
-        const incomeData: Income[] = res.data || [];
+        // API now returns data directly
+        const incomeData: Income[] = res?.data || res || [];
 
-        // Filter by month
+        // Filter by month with safe date parsing
         const filtered = incomeData.filter((income) => {
-          const incomeDate = new Date(income.date);
+          const incomeDate = safeParseDate(income.date);
+          if (!incomeDate) return false;
           const [year, monthNum] = month.split("-").map(Number);
           return incomeDate.getFullYear() === year && incomeDate.getMonth() + 1 === monthNum;
         });
@@ -225,9 +236,11 @@ const IncomeByDateTable = ({ month }: { month: string }) => {
     fetchData();
   }, [month]);
 
-  // Group by date and sum amounts
+  // Group by date and sum amounts with safe date parsing
   const groupedByDate = incomes.reduce((acc, row) => {
-    const dateStr = new Date(row.date).toLocaleDateString();
+    const parsedDate = safeParseDate(row.date);
+    if (!parsedDate) return acc;
+    const dateStr = parsedDate.toLocaleDateString();
     if (!acc[dateStr]) {
       acc[dateStr] = 0;
     }

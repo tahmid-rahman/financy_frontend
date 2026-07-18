@@ -1,7 +1,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
-import { updateProfile } from "../../services/api";
+import { api } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function AvatarEditorModal({
@@ -13,16 +13,19 @@ export default function AvatarEditorModal({
   onClose: () => void;
   onSave: (avatar: string) => void;
 }) {
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
+      // Create preview URL
       const reader = new FileReader();
       reader.onload = (event) => {
-        setSelectedFile(event.target?.result as string);
+        setPreviewUrl(event.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -33,8 +36,13 @@ export default function AvatarEditorModal({
 
     setIsLoading(true);
     try {
-      await updateProfile({ avatar: selectedFile });
-      onSave(selectedFile);
+      const formData = new FormData();
+      formData.append("avatar", selectedFile);
+
+      const response = await api.put("/accounts/user-profile/", formData);
+      // Backend returns { message, data: { avatar_url, ... } }
+      const avatarUrl = response.data?.data?.avatar_url || response.data?.data?.avatar || previewUrl;
+      onSave(avatarUrl);
       showToast({ message: "Avatar updated successfully!", type: "success" });
       onClose();
     } catch (err: any) {
@@ -82,7 +90,7 @@ export default function AvatarEditorModal({
                   <div className="flex justify-center">
                     <div className="relative">
                       <img
-                        src={selectedFile || "/default-avatar.png"}
+                        src={previewUrl || "/default-avatar.png"}
                         alt="Preview"
                         className="w-32 h-32 rounded-full object-cover border-4 border-primary/10"
                       />

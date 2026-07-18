@@ -1,7 +1,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
 import Button from "../ui/Button";
-import { createIncome } from "../../services/api";
+import { updateIncome } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 type IncomeSource = {
@@ -9,14 +9,24 @@ type IncomeSource = {
   name: string;
 };
 
-export default function AddIncomeModal({
+type Income = {
+  id: number;
+  amount: number;
+  description: string;
+  source: number;
+  date: string;
+};
+
+export default function EditIncomeModal({
   isOpen,
   onClose,
+  income,
   incomeSources,
   onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  income: Income | null;
   incomeSources: IncomeSource[];
   onSuccess?: () => void;
 }) {
@@ -27,12 +37,14 @@ export default function AddIncomeModal({
   const [error, setError] = useState("");
   const { showToast } = useToast();
 
-  // Update sourceId when incomeSources are loaded
+  // Update form when income changes
   useEffect(() => {
-    if (incomeSources.length > 0 && sourceId === 0) {
-      setSourceId(incomeSources[0].id);
+    if (income) {
+      setAmount(String(income.amount));
+      setSourceId(income.source);
+      setDescription(income.description || "");
     }
-  }, [incomeSources, sourceId]);
+  }, [income]);
 
   const handleSubmit = async () => {
     if (!amount || !sourceId || sourceId === 0) {
@@ -44,24 +56,18 @@ export default function AddIncomeModal({
     setIsLoading(true);
 
     try {
-      console.log("Creating income with:", { amount, description, source: sourceId });
-      const result = await createIncome({
+      await updateIncome(income!.id, {
         amount,
         description,
         source: sourceId,
       });
-      console.log("Income created:", result);
-      showToast({ message: "Income added successfully!", type: "success" });
-      // Reset form
-      setAmount("");
-      setDescription("");
-      setSourceId(incomeSources[0]?.id || 0);
+      showToast({ message: "Income updated successfully!", type: "success" });
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      const errorMsg = err?.errors || err?.message || "Failed to add income";
+      const errorMsg = err?.errors || err?.message || "Failed to update income";
       showToast({ message: errorMsg, type: "error" });
-      setError(typeof errorMsg === "string" ? errorMsg : "Failed to add income");
+      setError(typeof errorMsg === "string" ? errorMsg : "Failed to update income");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +101,7 @@ export default function AddIncomeModal({
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-surface border border-border/50 p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title as="h3" className="text-lg text-text font-medium mb-4">
-                  Add New Income
+                  Edit Income
                 </Dialog.Title>
 
                 <div className="space-y-4">
@@ -143,7 +149,7 @@ export default function AddIncomeModal({
                     </select>
                   </div>
 
-                  {error && <p className="text-sm text-accent">{error}</p>}
+                  {error && <p className="text-sm text-primary">{error}</p>}
 
                   <div className="pt-4 flex text-text justify-end gap-3">
                     <Button variant="ghost" onClick={onClose} disabled={isLoading}>
@@ -155,7 +161,7 @@ export default function AddIncomeModal({
                       isLoading={isLoading}
                       disabled={!amount || !sourceId}
                     >
-                      Add Income
+                      Update Income
                     </Button>
                   </div>
                 </div>

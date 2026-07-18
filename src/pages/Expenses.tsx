@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ExpenseList from "../components/finance/ExpenseList";
 import AddExpenseModal from "../components/finance/AddExpenseModal";
+import EditExpenseModal from "../components/finance/EditExpenseModal";
 import EditCategoryModal from "../components/finance/EditCategoryModal";
 import Button from "../components/ui/Button";
 import FilterDropdown from "../components/ui/FilterDropdown";
@@ -8,6 +9,14 @@ import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
 import { Footer } from "../components/nav";
 import { getCategories, getExpenses, getBudgets } from "../services/api";
+
+type Expense = {
+  id: number;
+  description: string;
+  amount: number;
+  category: number;
+  date: string;
+};
 
 type ExpenseSummary = {
   totalSpent: number;
@@ -17,15 +26,17 @@ type ExpenseSummary = {
   budgetUsedPercent: number;
   topCategory: string;
   transactionCount: number;
-  vsLastMonth: number; // percentage change vs last month
+  vsLastMonth: number;
 };
 
 export default function Expenses() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isEditExpenseModalOpen, setIsEditExpenseModalOpen] = useState(false);
   const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [summary, setSummary] = useState<ExpenseSummary>({
     totalSpent: 0,
     dailyAverage: 0,
@@ -124,6 +135,11 @@ export default function Expenses() {
     setRefreshKey((k) => k + 1);
   };
 
+  const handleEditExpense = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsEditExpenseModalOpen(true);
+  };
+
   const handleAddCategory = (newCategory: string) => {
     if (!categoryNames.includes(newCategory)) {
       setCategories([...categories, { id: Date.now(), name: newCategory }]);
@@ -161,14 +177,19 @@ export default function Expenses() {
               />
               <div className="flex gap-2">
                 <Button
-                  variant="ghost"
+                  variant="ghostAccent"
                   size="sm"
                   onClick={() => setIsEditCategoryModalOpen(true)}
-                  className="flex items-center gap-2 border border-primary"
+                  className="flex items-center gap-2 border border-border"
                 >
                   Edit Category
                 </Button>
-                <Button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-2">
+                <Button
+                  variant="accent"
+                  size="sm"
+                  onClick={() => setIsExpenseModalOpen(true)}
+                  className="flex items-center gap-2"
+                >
                   Add Expense
                 </Button>
               </div>
@@ -183,6 +204,8 @@ export default function Expenses() {
               key={refreshKey}
               filter={activeFilter}
               categories={categories}
+              onEdit={handleEditExpense}
+              onSuccess={handleExpenseSuccess}
             />
           </div>
           <div className="bg-surface border border-border/50 rounded-lg p-5 h-fit sticky top-6">
@@ -198,7 +221,7 @@ export default function Expenses() {
                 <div className="flex justify-between">
                   <span className="text-text-muted">Total Spent</span>
                   <div className="text-right">
-                    <span className="font-medium">৳{summary.totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="font-medium text-red-500">৳{summary.totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     {summary.vsLastMonth !== 0 && (
                       <span className={`text-xs ml-2 ${summary.vsLastMonth > 0 ? "text-red-500" : "text-green-500"}`}>
                         ({summary.vsLastMonth > 0 ? "+" : ""}{summary.vsLastMonth.toFixed(0)}% vs last month)
@@ -243,6 +266,16 @@ export default function Expenses() {
       <AddExpenseModal
         isOpen={isExpenseModalOpen}
         onClose={() => setIsExpenseModalOpen(false)}
+        categories={categories}
+        onSuccess={handleExpenseSuccess}
+      />
+      <EditExpenseModal
+        isOpen={isEditExpenseModalOpen}
+        onClose={() => {
+          setIsEditExpenseModalOpen(false);
+          setSelectedExpense(null);
+        }}
+        expense={selectedExpense}
         categories={categories}
         onSuccess={handleExpenseSuccess}
       />

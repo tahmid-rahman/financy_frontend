@@ -2,7 +2,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Button from "../ui/Button";
 import { FaTrash } from "react-icons/fa";
-import { updateCategory, deleteCategory } from "../../services/api";
+import { addCategory, updateCategory, deleteCategory } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 type Category = {
@@ -57,7 +57,7 @@ export default function EditCategoryModal({
         showToast({ message: "Category updated successfully!", type: "success" });
         onEditCategory(selectedCategory.name, trimmed);
       } else if (mode === "add") {
-        // Add is handled by AddCategoryModal, just trigger callback
+        await addCategory(trimmed);
         onAddCategory(trimmed);
       }
 
@@ -136,7 +136,7 @@ export default function EditCategoryModal({
                 {mode === "select" ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-3">
-                      <Button onClick={() => setMode("add")} className="w-full justify-center" isLoading={isLoading}>
+                      <Button variant="accent" onClick={() => setMode("add")} className="w-full justify-center" isLoading={isLoading}>
                         Add New Category
                       </Button>
                       {categories.length > 0 && (
@@ -153,7 +153,7 @@ export default function EditCategoryModal({
                       )}
                     </div>
                     <div className="pt-2 flex justify-end">
-                      <Button variant="ghost" onClick={onClose} disabled={isLoading}>
+                      <Button variant="ghostAccent" onClick={onClose} disabled={isLoading}>
                         Cancel
                       </Button>
                     </div>
@@ -169,7 +169,7 @@ export default function EditCategoryModal({
                             const cat = categories.find((c) => c.id === Number(e.target.value));
                             if (cat) handleCategorySelect(cat);
                           }}
-                          className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                          className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                         >
                           <option value="">Select a category</option>
                           {categories.map((category) => (
@@ -192,10 +192,10 @@ export default function EditCategoryModal({
                           setCategoryName(e.target.value);
                           setError("");
                         }}
-                        className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                        className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                         placeholder={`e.g. ${mode === "add" ? "Utilities" : "Enter new name"}`}
                       />
-                      {error && <p className="mt-1 text-sm text-accent">{error}</p>}
+                      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
                     </div>
 
                     <div className="pt-4 flex justify-between">
@@ -209,8 +209,7 @@ export default function EditCategoryModal({
                       </div>
                       <div className="flex gap-3">
                         <Button
-                          variant="secondary"
-                          className="text-text-muted"
+                          variant="ghostAccent"
                           onClick={() => {
                             if (mode === "edit" && !selectedCategory) {
                               setMode("select");
@@ -223,7 +222,7 @@ export default function EditCategoryModal({
                           Back
                         </Button>
                         <Button
-                          variant="primary"
+                          variant="accent"
                           onClick={handleSubmit}
                           isLoading={isLoading}
                           disabled={!categoryName.trim()}

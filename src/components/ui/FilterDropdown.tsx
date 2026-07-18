@@ -13,17 +13,34 @@ export default function FilterDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownWidth, setDropdownWidth] = useState("auto");
+  const tempSpanRef = useRef<HTMLSpanElement | null>(null);
+
+  // Cleanup temp element on unmount
+  useEffect(() => {
+    return () => {
+      if (tempSpanRef.current && tempSpanRef.current.parentNode) {
+        tempSpanRef.current.parentNode.removeChild(tempSpanRef.current);
+      }
+    };
+  }, []);
 
   // Calculate the maximum width needed based on all options
   useEffect(() => {
+    // Cleanup previous temp element if any
+    if (tempSpanRef.current && tempSpanRef.current.parentNode) {
+      tempSpanRef.current.parentNode.removeChild(tempSpanRef.current);
+      tempSpanRef.current = null;
+    }
+
     if (buttonRef.current) {
       // Temporarily render all options to measure their width
       const tempSpan = document.createElement("span");
       tempSpan.style.visibility = "hidden";
       tempSpan.style.whiteSpace = "nowrap";
       tempSpan.style.position = "absolute";
-      tempSpan.style.padding = "0.5rem 1rem"; // Match your button's padding
+      tempSpan.style.padding = "0.5rem 1rem";
       document.body.appendChild(tempSpan);
+      tempSpanRef.current = tempSpan;
 
       let maxWidth = 0;
       options.forEach((option) => {
@@ -38,7 +55,9 @@ export default function FilterDropdown({
       // Use the larger of the two widths
       setDropdownWidth(`${Math.max(maxWidth, buttonWidth)}px`);
 
+      // Clean up immediately after measurement
       document.body.removeChild(tempSpan);
+      tempSpanRef.current = null;
     }
   }, [options, activeOption]);
 

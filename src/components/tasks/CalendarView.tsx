@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
+// TypeScript may complain about missing type declarations for this css import
+// @ts-ignore
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { getTasks } from "../../services/api";
@@ -47,64 +49,88 @@ export default function CalendarView() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchTasks() {
       try {
         setIsLoading(true);
         const res = await getTasks();
-        const tasks: Task[] = res.data || [];
+        if (cancelled) return;
 
-        const calendarEvents: CalendarEvent[] = tasks.map((task) => {
-          const dueDate = new Date(task.due_date);
+        // Backend returns { message: "...", data: [...] }
+        // After API fix, response is now directly the data
+        const rawData = res;
+        const tasks: Task[] = rawData?.data || rawData || [];
 
-          if (task.all_day || !task.start_time) {
-            // All-day event: start and end are the same date
-            return {
+        const calendarEvents: CalendarEvent[] = [];
+
+        for (const task of tasks) {
+          try {
+            // Safe date parsing with fallback
+            const dueDate = new Date(task.due_date);
+            if (isNaN(dueDate.getTime())) {
+              console.warn(`Invalid date for task ${task.id}: ${task.due_date}`);
+              continue; // Skip invalid tasks
+            }
+
+            if (task.all_day || !task.start_time) {
+              // All-day event: start and end are the same date
+              calendarEvents.push({
+                id: task.id,
+                title: task.title,
+                start: dueDate,
+                end: dueDate,
+                allDay: true,
+                priority: task.priority,
+                completed: task.completed,
+              });
+              continue;
+            }
+
+            // Time-specific event
+            const [startHours, startMinutes] = task.start_time.split(":").map(Number);
+            const startDate = new Date(dueDate);
+            startDate.setHours(startHours, startMinutes, 0, 0);
+
+            let endDate: Date;
+            if (task.end_time) {
+              const [endHours, endMinutes] = task.end_time.split(":").map(Number);
+              endDate = new Date(dueDate);
+              endDate.setHours(endHours, endMinutes, 0, 0);
+            } else {
+              // Default end time is 1 hour after start
+              endDate = new Date(startDate);
+              endDate.setHours(endDate.getHours() + 1);
+            }
+
+            calendarEvents.push({
               id: task.id,
               title: task.title,
-              start: dueDate,
-              end: dueDate,
-              allDay: true,
+              start: startDate,
+              end: endDate,
+              allDay: false,
               priority: task.priority,
               completed: task.completed,
-            };
+            });
+          } catch (err) {
+            console.warn(`Failed to process task ${task.id}:`, err);
+            // Continue processing other tasks
           }
-
-          // Time-specific event
-          const [startHours, startMinutes] = task.start_time.split(":").map(Number);
-          const startDate = new Date(dueDate);
-          startDate.setHours(startHours, startMinutes, 0, 0);
-
-          let endDate: Date;
-          if (task.end_time) {
-            const [endHours, endMinutes] = task.end_time.split(":").map(Number);
-            endDate = new Date(dueDate);
-            endDate.setHours(endHours, endMinutes, 0, 0);
-          } else {
-            // Default end time is 1 hour after start
-            endDate = new Date(startDate);
-            endDate.setHours(endDate.getHours() + 1);
-          }
-
-          return {
-            id: task.id,
-            title: task.title,
-            start: startDate,
-            end: endDate,
-            allDay: false,
-            priority: task.priority,
-            completed: task.completed,
-          };
-        });
+        }
 
         setEvents(calendarEvents);
       } catch (err) {
         console.error("Failed to fetch tasks for calendar", err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     fetchTasks();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const eventStyleGetter = (event: CalendarEvent) => {
