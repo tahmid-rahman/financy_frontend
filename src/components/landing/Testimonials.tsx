@@ -2,13 +2,13 @@ import { motion } from "framer-motion";
 const testimonials = [
   {
     quote: "Saved me over $3,000 in the first 3 months by revealing hidden spending patterns.",
-    author: "Alex R.",
+    author: "Abdur Rahman.",
     role: "Freelance Developer",
   },
   {
     quote: "Finally a finance app that doesn't make me feel guilty about my coffee habit.",
-    author: "Priya K.",
-    role: "Marketing Manager",
+    author: "Tahmid Rahman.",
+    role: "Data Scientist",
   },
 ];
 
@@ -24,7 +24,7 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className={`flex-1 p-8 rounded-2xl bg-surface border border-border ${index % 2 === 0 ? "md:mt-12" : ""}`}
+              className={`flex-1 p-8 rounded-2xl bg-surface border border-border ${index % 2 === 0 ? "" : ""}`}
             >
               <blockquote className="text-lg italic text-text mb-6">"{testimonial.quote}"</blockquote>
               <div>

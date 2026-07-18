@@ -53,7 +53,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-surface border-t border-border">
+    <footer className="bg-surface border-t border-border hidden md:block">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {/* Mobile Accordion */}
         <div className="lg:hidden space-y-6">
@@ -163,7 +163,7 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="Email address"
-                className="flex-1 min-w-0 px-3 py-2 text-sm rounded-md border border-border focus:ring-1 focus:ring-primary focus:border-primary"
+                className="flex-1 min-w-0 px-3 py-2 text-sm rounded-md text-gray-700 border border-border focus:ring-1 focus:ring-primary focus:border-primary"
               />
               <button
                 type="submit"
