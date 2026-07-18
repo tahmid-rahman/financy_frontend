@@ -139,7 +139,6 @@ export default function SourceManagementModal({
                       <Button
                         onClick={() => setMode("add")}
                         className="w-full justify-center"
-                        variant="accent"
                         isLoading={isLoading}
                       >
                         Add New Source
@@ -156,7 +155,7 @@ export default function SourceManagementModal({
                       )}
                     </div>
                     <div className="pt-2 flex justify-end">
-                      <Button variant="ghostAccent" onClick={onClose} disabled={isLoading}>
+                      <Button variant="ghost" onClick={onClose} disabled={isLoading}>
                         Cancel
                       </Button>
                     </div>
@@ -198,7 +197,7 @@ export default function SourceManagementModal({
                         className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
                         placeholder={`e.g. ${mode === "add" ? "Freelance Income" : "Enter new name"}`}
                       />
-                      {error && <p className="mt-1 text-sm text-accent">{error}</p>}
+                      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
                     </div>
 
                     <div className="pt-4 flex justify-between">
@@ -211,7 +210,7 @@ export default function SourceManagementModal({
                       </div>
                       <div className="flex gap-3">
                         <Button
-                          variant="ghostAccent"
+                          variant="ghost"
                           onClick={() => {
                             if (mode === "edit" && !selectedSource) {
                               setMode("select");
@@ -225,7 +224,7 @@ export default function SourceManagementModal({
                         </Button>
                         <Button
                           onClick={handleSubmit}
-                          variant="accent"
+                          variant="primary"
                           isLoading={isLoading}
                           disabled={!sourceName.trim()}
                         >

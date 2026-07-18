@@ -105,7 +105,7 @@ export default function AddExpenseModal({
                       type="text"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-4 py-2 bg-background text-text border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      className="w-full px-4 py-2 bg-background text-text border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                       placeholder="What was this expense for?"
                     />
                   </div>
@@ -121,7 +121,7 @@ export default function AddExpenseModal({
                           setAmount(e.target.value);
                           setError("");
                         }}
-                        className="w-full pl-8 pr-4 py-2 bg-background border border-border/50 text-text rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                        className="w-full pl-8 pr-4 py-2 bg-background border border-border/50 text-text rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                         placeholder="0.00"
                       />
                     </div>
@@ -132,7 +132,7 @@ export default function AddExpenseModal({
                     <select
                       value={categoryId}
                       onChange={(e) => setCategoryId(Number(e.target.value))}
-                      className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                      className="w-full px-4 py-2 text-text bg-background border border-border/50 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none"
                     >
                       {categories.length === 0 && <option value="">No categories available</option>}
                       {categories.map((cat) => (
@@ -146,10 +146,10 @@ export default function AddExpenseModal({
                   {error && <p className="text-sm text-accent">{error}</p>}
 
                   <div className="pt-4 flex text-text justify-end gap-3">
-                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+                    <Button variant="ghostAccent" onClick={onClose} disabled={isLoading}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSubmit} isLoading={isLoading} disabled={!amount || !categoryId}>
+                    <Button variant="accent" onClick={handleSubmit} isLoading={isLoading} disabled={!amount || !categoryId}>
                       Save Expense
                     </Button>
                   </div>

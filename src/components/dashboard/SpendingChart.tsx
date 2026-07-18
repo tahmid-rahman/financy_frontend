@@ -14,21 +14,30 @@ export default function SpendingChart() {
   const [timeRange, setTimeRange] = useState<"30" | "6m" | "1y">("6m");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchTrends() {
       try {
         setIsLoading(true);
         const res = await getMonthlyTrends();
-        setData(res.data || res || []);
+        if (cancelled) return;
+
+        // Backend returns { message: "...", data: [...] }
+        const trendsData = res?.data?.data || res?.data || [];
+        if (!cancelled) setData(Array.isArray(trendsData) ? trendsData : []);
       } catch (err) {
         console.error("Failed to fetch monthly trends", err);
-        // Fallback to empty data
-        setData([]);
+        if (!cancelled) setData([]);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     fetchTrends();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Filter data based on time range

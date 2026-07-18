@@ -1,6 +1,5 @@
 import React from "react";
 import "./styles/globals.css";
-import "./styles/calendar.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { PublicRoute } from "./contexts/PublicRoute";
@@ -16,6 +15,7 @@ import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/404";
+import OAuthCallback from "./pages/OAuthCallback";
 
 function App() {
   return (
@@ -32,6 +32,7 @@ function App() {
           }
         />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/oauth-callback" element={<OAuthCallback />} />
         <Route
           path="/login"
           element={

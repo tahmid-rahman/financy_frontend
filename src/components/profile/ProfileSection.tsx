@@ -28,7 +28,7 @@ export default function ProfileSection() {
         const data = res.data || res;
         const nameParts = (data.name || "").split(" ");
         setUser({
-          avatar: data.avatar || "",
+          avatar: data.avatar_url || data.avatar || "",
           firstName: data.first_name || nameParts[0] || "",
           lastName: data.last_name || nameParts.slice(1).join(" ") || "",
           name: data.name || "",
@@ -51,7 +51,7 @@ export default function ProfileSection() {
       const data = res.data || res;
       const nameParts = (data.name || "").split(" ");
       setUser({
-        avatar: data.avatar || "",
+        avatar: data.avatar_url || data.avatar || "",
         firstName: data.first_name || nameParts[0] || "",
         lastName: data.last_name || nameParts.slice(1).join(" ") || "",
         name: data.name || "",

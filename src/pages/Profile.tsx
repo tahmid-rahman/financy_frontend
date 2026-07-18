@@ -1,14 +1,14 @@
 import { useState } from "react";
-// import Button from "../components/ui/Button";
 import { Tabs } from "../components/ui/Tabs";
 import ProfileSection from "../components/profile/ProfileSection";
 import SettingsSection from "../components/profile/SettingsSection";
+import ActivityLogSection from "../components/profile/ActivityLogSection";
 import Navbar from "../components/nav/Navbar";
 import { Helmet } from "react-helmet";
 import { Footer } from "../components/nav";
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState<"profile" | "settings">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "settings" | "activity">("profile");
 
   return (
     <div className="min-h-screen bg-background text-text">
@@ -24,10 +24,11 @@ export default function Profile() {
           tabs={[
             { id: "profile", label: "Profile" },
             { id: "settings", label: "Settings" },
+            { id: "activity", label: "Activity Log" },
           ]}
           activeTab={activeTab}
           onTabChange={(tabId) => {
-            if (tabId === "profile" || tabId === "settings") {
+            if (tabId === "profile" || tabId === "settings" || tabId === "activity") {
               setActiveTab(tabId);
             }
           }}
@@ -36,7 +37,13 @@ export default function Profile() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-4 sm:p-6 mb-16 sm:mb-0">
-        {activeTab === "profile" ? <ProfileSection /> : <SettingsSection />}
+        {activeTab === "profile" ? (
+          <ProfileSection />
+        ) : activeTab === "settings" ? (
+          <SettingsSection />
+        ) : (
+          <ActivityLogSection />
+        )}
       </main>
       <Footer />
     </div>

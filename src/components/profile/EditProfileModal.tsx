@@ -39,7 +39,6 @@ export default function EditProfileModal({
 
     try {
       await updateProfile({
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,

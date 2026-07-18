@@ -8,26 +8,43 @@ import { Footer } from "../components/nav";
 import { getIncomes, getExpenses, getCategories, getIncomeSources } from "../services/api";
 
 export default function Reports() {
-  const [selectedMonth, setSelectedMonth] = useState<string>(
-    new Date().toISOString().slice(0, 7) // YYYY-MM format
-  );
+  const currentDate = new Date();
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
   const [viewMode, setViewMode] = useState<"table" | "category">("table");
   const [isExporting, setIsExporting] = useState(false);
 
-  // Generate month options for the last 5 years (60 months)
-  const getMonthOptions = () => {
-    const options = [];
+  // Generate year options (last 5 years)
+  const getYearOptions = () => {
+    const years = [];
     const now = new Date();
-    for (let i = 0; i < 60; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      options.push({
-        value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
-        label: date.toLocaleDateString("default", { month: "long", year: "numeric" }),
-      });
+    for (let i = 0; i < 5; i++) {
+      years.push(now.getFullYear() - i);
     }
-    return options;
+    return years;
   };
+
+  // Generate month options
+  const getMonthOptions = () => {
+    const months = [
+      { value: 1, label: "January" },
+      { value: 2, label: "February" },
+      { value: 3, label: "March" },
+      { value: 4, label: "April" },
+      { value: 5, label: "May" },
+      { value: 6, label: "June" },
+      { value: 7, label: "July" },
+      { value: 8, label: "August" },
+      { value: 9, label: "September" },
+      { value: 10, label: "October" },
+      { value: 11, label: "November" },
+      { value: 12, label: "December" },
+    ];
+    return months;
+  };
+
+  const selectedMonthStr = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -40,11 +57,10 @@ export default function Reports() {
           sources[s.id] = s.name;
         });
 
-        // Filter by month
-        const [year, monthNum] = selectedMonth.split("-").map(Number);
+        // Filter by selected month and year
         const filtered = incomes.filter((income: { date: string }) => {
           const incomeDate = new Date(income.date);
-          return incomeDate.getFullYear() === year && incomeDate.getMonth() + 1 === monthNum;
+          return incomeDate.getFullYear() === selectedYear && incomeDate.getMonth() + 1 === selectedMonth;
         });
 
         // Create CSV content
@@ -56,7 +72,7 @@ export default function Reports() {
           income.amount.toString(),
         ]);
 
-        downloadCSV([headers, ...rows], `income-report-${selectedMonth}.csv`);
+        downloadCSV([headers, ...rows], `income-report-${selectedMonthStr}.csv`);
       } else {
         const [expensesRes, categoriesRes] = await Promise.all([getExpenses(), getCategories()]);
         const expenses = expensesRes.data || [];
@@ -65,11 +81,10 @@ export default function Reports() {
           categories[c.id] = c.name;
         });
 
-        // Filter by month
-        const [year, monthNum] = selectedMonth.split("-").map(Number);
+        // Filter by selected month and year
         const filtered = expenses.filter((expense: { date: string }) => {
           const expenseDate = new Date(expense.date);
-          return expenseDate.getFullYear() === year && expenseDate.getMonth() + 1 === monthNum;
+          return expenseDate.getFullYear() === selectedYear && expenseDate.getMonth() + 1 === selectedMonth;
         });
 
         // Create CSV content
@@ -81,7 +96,7 @@ export default function Reports() {
           expense.amount.toString(),
         ]);
 
-        downloadCSV([headers, ...rows], `expense-report-${selectedMonth}.csv`);
+        downloadCSV([headers, ...rows], `expense-report-${selectedMonthStr}.csv`);
       }
     } catch (err) {
       console.error("Export failed", err);
@@ -113,19 +128,44 @@ export default function Reports() {
             <h1 className="text-2xl font-bold text-text">Financial Reports</h1>
 
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              {/* Month Selector */}
-              <div className="relative flex-1 sm:flex-none min-w-[200px]">
+              {/* Year Selector */}
+              <div className="relative">
                 <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="block w-full pl-3 pr-10 py-2 text-base border border-border focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-surface text-text"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="block w-full pl-3 pr-10 py-2 text-base border border-border focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-surface text-text appearance-none cursor-pointer"
                 >
-                  {getMonthOptions().map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+                  {getYearOptions().map((year) => (
+                    <option key={year} value={year}>
+                      {year}
                     </option>
                   ))}
                 </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Month Selector */}
+              <div className="relative">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="block w-full pl-3 pr-10 py-2 text-base border border-border focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-surface text-text appearance-none cursor-pointer"
+                >
+                  {getMonthOptions().map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
 
               {/* View Mode Toggle */}
@@ -164,7 +204,7 @@ export default function Reports() {
               onClick={() => { setActiveTab("income"); setViewMode("table"); }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "income"
-                  ? "border-primary text-primary"
+                  ? "border-green-500 text-green-500"
                   : "border-transparent text-text-muted hover:text-text hover:border-border"
               }`}
             >
@@ -174,7 +214,7 @@ export default function Reports() {
               onClick={() => { setActiveTab("expense"); setViewMode("table"); }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "expense"
-                  ? "border-primary text-primary"
+                  ? "border-red-500 text-red-500"
                   : "border-transparent text-text-muted hover:text-text hover:border-border"
               }`}
             >
@@ -189,15 +229,15 @@ export default function Reports() {
         <div className="">
           {activeTab === "income" ? (
             viewMode === "category" ? (
-              <IncomeByCategoryView month={selectedMonth} />
+              <IncomeByCategoryView month={selectedMonthStr} />
             ) : (
-              <IncomeTable month={selectedMonth} />
+              <IncomeTable month={selectedMonthStr} />
             )
           ) : (
             viewMode === "category" ? (
-              <ExpenseByCategoryView month={selectedMonth} />
+              <ExpenseByCategoryView month={selectedMonthStr} />
             ) : (
-              <ExpenseTable month={selectedMonth} />
+              <ExpenseTable month={selectedMonthStr} />
             )
           )}
         </div>

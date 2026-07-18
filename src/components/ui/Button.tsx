@@ -19,7 +19,7 @@ export default function Button({
   isLoading = false,
   ...props
 }: ButtonProps) {
-  const baseStyles = "rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50";
+  const baseStyles = "rounded-md font-medium transition-colors focus:outline-none focus:ring-2 ";
 
   const sizeStyles = {
     sm: "px-3 py-1.5 text-sm",
@@ -27,12 +27,12 @@ export default function Button({
   };
 
   const variantStyles = {
-    primary: "bg-primary text-surface hover:bg-primary-dark",
-    secondary: "bg-surface border border-border hover:bg-background",
-    ghost: "text-primary hover:bg-primary/10",
-    accent: "bg-accent hover:bg-accent-dark text-white hover:bg-accent/80",
-    ghostAccent: "text-accent hover:bg-accent/10 border border-accent/30",
-    delete: "bg-red-500 hover:bg-red-600 text-white",
+    primary: "bg-primary text-surface hover:bg-primary-dark focus:ring-primary/50",
+    secondary: "bg-surface border border-border hover:bg-background focus:ring-white/50",
+    ghost: "text-primary border border-border hover:bg-primary/10 focus:ring-primary/50",
+    accent: "bg-accent text-surface hover:bg-accent-dark focus:ring-accent/50",  
+    ghostAccent: "text-accent border border-border hover:bg-accent/10 focus:ring-accent/50", 
+    delete: "bg-red-500 hover:bg-red-600 text-white focus:ring-red-500/50",
   };
 
   return (
